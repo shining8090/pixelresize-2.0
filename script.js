@@ -20,61 +20,11 @@ const SEO_DATA = {
             { q: 'Are my images safe?', a: 'Absolutely. PixelResize is 100% private. We use client-side technology, meaning your images are never uploaded to any server. Your privacy is guaranteed by design.' }
         ]
     },
-    'resize': {
-        title: 'Resize Image Online Free | Professional Image Resizer | PixelResize',
-        description: 'Resize images online for free without losing quality. Perfect for social media, websites, and emails. 100% secure client-side resizing.',
-        h2: 'How to Resize Images Online Without Losing Quality',
-        body: '<p>Resizing images is crucial for maintaining fast loading speeds for your website or blog. Our professional <strong>image resizer</strong> allows you to change dimensions up or down while maintaining the perfect aspect ratio. Whether you are preparing images for Instagram, a professional portfolio, or an email attachment, PixelResize handles it locally.</p>',
-        faq: [
-            { q: 'Will I lose quality when resizing?', a: 'Our tool uses sophisticated interpolation algorithms to ensure your images stay sharp even after resizing.' },
-            { q: 'Can I resize multiple images at once?', a: 'Yes, our bulk processing engine allows you to upload many files and apply resizing rules to all of them simultaneously.' }
-        ]
-    },
-    'compress': {
-        title: 'Compress Image Online Free | Reduce Image Size | PixelResize',
-        description: 'Reduce image file size online without compromising quality. Advanced compression for JPG, PNG, and WebP. Improve Core Web Vitals.',
-        h2: 'Expert Image Compression for Faster Websites',
-        body: '<p>Our <strong>image compressor online</strong> strips unnecessary metadata and optimizes pixel data to drastically reduce file weight. This is essential for improving your Google <strong>Core Web Vitals</strong>, specifically Largest Contentful Paint (LCP). By using smarter algorithms inspired by Google’s Squoosh project, we provide the best size-to-quality ratio.</p>',
-        faq: [
-            { q: 'How much can I reduce file size?', a: 'Typically, users see a file size reduction of 60-90% for JPG and WebP images without noticing any visual changes.' },
-            { q: 'Is my data secure?', a: 'Yes. Unlike other compression tools, we don\'t upload your files to a central server. Everything happens in your browser RAM.' }
-        ]
-    },
-    'crop': {
-        title: 'Crop Image Online Free | Image Cropper Tool | PixelResize',
-        description: 'Perfectly frame your pictures with our free online image cropper. Standard presets for Instagram, 16:9, 4:3, and custom ratios.',
-        h2: 'Perfectly Frame Your Photos with Our Online Cropper',
-        body: '<p>Use our <strong>image cropper</strong> to remove unwanted edges, focus on a specific subject, or match a specific aspect ratio. We provide standard presets for all major social platforms, making it the perfect tool for content creators and photographers.</p>',
-        faq: [
-            { q: 'Can I crop to a specific aspect ratio?', a: 'Yes, we support 1:1, 4:3, 16:9, 9:16 and free-form cropping.' },
-            { q: 'Can I rotate before cropping?', a: 'Yes, the tool allows you to rotate and flip your image to get the alignment perfect before you select your crop area.' }
-        ]
-    },
-    'target': {
-        title: 'Resize Image to 50KB or 100KB | Target Size Compressor',
-        description: 'Need an image under 50KB or 100KB? Our tool automatically compresses your image to match your exact file size requirements.',
-        h2: 'How to Compress Images to 50KB, 100KB, or 200KB',
-        body: '<p>Many official portals and job application systems have strict file size limits (e.g., must be under 50KB). Use our <strong>target size compressor</strong> to find the highest quality level that fits within your required limit. This eliminates the trial-and-error process of manual compression.</p>',
-        faq: [
-            { q: 'How do I get an image under 50KB?', a: 'Simply select the 50KB preset, upload your image, and our algorithm will iteratively find the best quality that fits the limit.' },
-            { q: 'Does it work for large photos?', a: 'Yes, it can scale down high-resolution DSLR photos to fit web-ready limits in seconds.' }
-        ]
-    },
-    'convert': {
-        title: 'Online Image Converter | JPG to PNG, PNG to JPG, WebP, AVIF',
-        description: 'Convert images between JPG, PNG, WebP, AVIF, and BMP instantly. Secure browser-based conversion.',
-        h2: 'Convert Images to WebP, AVIF, PNG, or JPG Instantly',
-        body: '<p>Switch between formats easily. Convert <strong>JPG to PNG</strong> for transparency or <strong>JPG to WebP</strong> for better web performance.</p>',
-        faq: [
-            { q: 'Which format is best for web?', a: 'WebP and AVIF offer the best compression for modern websites.' },
-            { q: 'Can I convert BMP to PNG?', a: 'Yes, we support BMP, GIF, and many other formats.' }
-        ]
-    },
     'image-compressor': {
         title: 'Professional Image Compressor Online | Reduce File Size | PixelResize',
         description: 'Reduce image file size online without compromising quality. Advanced compression for JPG, PNG, and WebP. Improve Core Web Vitals and LCP.',
         h2: 'Expert Image Compression for Faster Websites',
-        body: '<p>Our <strong>image compressor online</strong> strips unnecessary metadata and optimizes pixel data to reduce weight. This improves your Core Web Vitals and user experience by reducing Largest Contentful Paint (LCP) and Cumulative Layout Shift (CLS) issues caused by heavy assets.</p>',
+        body: `<p>Our <strong>image compressor online</strong> strips unnecessary metadata and optimizes pixel data to reduce weight. This improves your Core Web Vitals and user experience by reducing Largest Contentful Paint (LCP) and Cumulative Layout Shift (CLS) issues caused by heavy assets. You can also use our <a href="/tools/image-resizer" onclick="event.preventDefault(); setTool('image-resizer')">online image resizer</a> to further optimize your images.</p>`,
         faq: [
             { q: 'How much can I reduce file size?', a: 'Typically, users see a file size reduction of 60-90% for JPG and WebP images without noticing any visual changes in quality.' },
             { q: 'Can I compress multiple images?', a: 'Yes, our bulk compression engine supports processing dozens of images at once directly in your browser tab.' }
@@ -84,7 +34,7 @@ const SEO_DATA = {
         title: 'Resize Image Online Free | Professional Image Resizer | PixelResize',
         description: 'Resize images online for free without losing quality. Perfect for social media, websites, and emails. 100% secure client-side resizing.',
         h2: 'How to Resize Images Online Without Losing Clarity',
-        body: '<p>Resizing images is crucial for maintaining fast loading speeds. Our professional <strong>image resizer</strong> allows you to change dimensions while maintaining the perfect aspect ratio. Whether you are preparing images for Instagram, LinkedIn, or a professional portfolio, PixelResize handles it locally.</p>',
+        body: `<p>Resizing images is crucial for maintaining fast loading speeds. Our professional <strong>image resizer</strong> allows you to change dimensions while maintaining the perfect aspect ratio. Whether you are preparing images for Instagram, LinkedIn, or a professional portfolio, PixelResize handles it locally. Don't forget to <a href="/tools/image-compressor" onclick="event.preventDefault(); setTool('image-compressor')">compress your images</a> after resizing for the best performance.</p>`,
         faq: [
             { q: 'Will I lose quality when resizing?', a: 'Our tool uses sophisticated interpolation algorithms (similar to Photoshop) to ensure your images stay sharp even after resizing.' },
             { q: 'What is the best width for web images?', a: 'For most websites, a width between 1200px and 1920px is ideal for hero sections, while 800px is perfect for blog content.' }
@@ -94,7 +44,7 @@ const SEO_DATA = {
         title: 'JPG to PNG Converter Online | Maintain Quality | PixelResize',
         description: 'Convert JPG images to PNG format instantly in your browser. Maintain transparency and visual fidelity with zero server uploads.',
         h2: 'Convert JPG to PNG Instantly and Securely',
-        body: '<p>Need transparency? Our <strong>JPG to PNG converter</strong> handles the transition perfectly. PNG is a lossless format, making it ideal for logos, icons, and graphics that require sharp edges and transparent backgrounds.</p>',
+        body: `<p>Need transparency? Our <strong>JPG to PNG converter</strong> handles the transition perfectly. PNG is a lossless format, making it ideal for logos, icons, and graphics that require sharp edges and transparent backgrounds. If you need the opposite, check our <a href="/tools/png-to-jpg" onclick="event.preventDefault(); setTool('png-to-jpg')">PNG to JPG tool</a>.</p>`,
         faq: [
             { q: 'Is JPG to PNG conversion lossless?', a: 'Yes, converting to PNG is a lossless process, meaning no image data is discarded during the conversion from JPG.' }
         ]
@@ -103,7 +53,7 @@ const SEO_DATA = {
         title: 'PNG to JPG Converter | Fast Online Image Converter | PixelResize',
         description: 'Convert PNG to JPG format instantly. Perfect for reducing file size for web use while maintaining high quality.',
         h2: 'Convert PNG to JPG for Faster Load Times',
-        body: '<p>Reduce your PNG file sizes drastically by converting them to JPG. High-quality PNG files can be massive; our tool allows you to convert them to optimized JPGs that load instantly on any mobile device.</p>',
+        body: `<p>Reduce your PNG file sizes drastically by converting them to JPG. High-quality PNG files can be massive; our tool allows you to convert them to optimized JPGs that load instantly on any mobile device. For transparent backgrounds, remember to use <a href="/tools/jpg-to-png" onclick="event.preventDefault(); setTool('jpg-to-png')">JPG to PNG</a> instead.</p>`,
         faq: [
             { q: 'Why convert PNG to JPG?', a: 'JPG files are significantly smaller than PNGs for photographic content, making them much better for web performance and SEO.' }
         ]
@@ -112,7 +62,7 @@ const SEO_DATA = {
         title: 'Convert JPG to WebP Online | Optimize for Modern Web | PixelResize',
         description: 'Convert JPG images to WebP format for superior compression and faster page loads. 100% private browser-based conversion.',
         h2: 'Boost Performance with WebP Conversion',
-        body: '<p>WebP is the modern performance king for the web. Convert your <strong>JPG to WebP</strong> and save up to 30% more space with better visual quality than traditional JPEG files.</p>',
+        body: `<p>WebP is the modern performance king for the web. Convert your <strong>JPG to WebP</strong> and save up to 30% more space with better visual quality than traditional JPEG files. For even newer technology, take a look at our <a href="/tools/to-avif" onclick="event.preventDefault(); setTool('to-avif')">convert to AVIF</a> tool.</p>`,
         faq: [
             { q: 'Are WebP images supported by all browsers?', a: 'Yes, as of 2026, all major browsers including Chrome, Safari, Firefox, and Edge fully support WebP images.' }
         ]
@@ -121,15 +71,7 @@ const SEO_DATA = {
         title: 'Discord PFP Resizer | Get Perfect Avatar Size | PixelResize',
         description: 'Perfectly resize your avatar for Discord (128x128). Auto-crop to square and optimize for profile display in seconds.',
         h2: 'How to Resize a Profile Picture for Discord',
-        body: `
-            <p>Discord avatars require a specific 128x128 resolution. Our dedicated <strong>Discord PFP resizer</strong> automatically handles the cropping and resizing to ensure your profile looks crisp and professional in every server.</p>
-            <h3>Best Discord Avatar Dimensions</h3>
-            <ul>
-                <li><strong>Recommended Size:</strong> 128x128 pixels.</li>
-                <li><strong>Aspect Ratio:</strong> 1:1 (Square).</li>
-                <li><strong>File Formats:</strong> JPG, PNG, or GIF.</li>
-            </ul>
-        `,
+        body: `<p>Discord avatars require a specific 128x128 resolution. Our dedicated <strong>Discord PFP resizer</strong> automatically handles the cropping and resizing to ensure your profile looks crisp and professional in every server. We recommend also using <a href="/tools/image-compressor" onclick="event.preventDefault(); setTool('image-compressor')">compression</a> if your avatar is a complex photograph.</p>`,
         faq: [
             { q: 'What is the best size for Discord PFPs?', a: 'While Discord displays at 128x128, uploading an optimized 512x512 or 1024x1024 square image often looks better on high-DPI displays.' }
         ]
@@ -138,28 +80,21 @@ const SEO_DATA = {
         title: 'Resize Passport Photo Online | 2x2 and 35x45mm Resizer | PixelResize',
         description: 'Resize your photo to official passport requirements. Supports US (2x2in), UK, and EU passport sizes with precise cropping.',
         h2: 'Professional Passport Photo Resizer',
-        body: `
-            <p>Resize your selfie to a professional <strong>passport photo</strong> (2x2 inches or 35x45mm) instantly online.</p>
-            <h3>Passport Photo Requirements</h3>
-            <ul>
-                <li><strong>US Passport:</strong> 2x2 inches (600x600 pixels).</li>
-                <li><strong>UK/EU Passport:</strong> 35x45 mm.</li>
-            </ul>
-        `,
+        body: `<p>Resize your selfie to a professional <strong>passport photo</strong> (2x2 inches or 35x45mm) instantly online. Also try our <a href="/crop-image" onclick="event.preventDefault(); setTool('crop-image')">crop tool</a> to center your face perfectly.</p>`,
         faq: [{ q: 'Can I use this for US Visa?', a: 'Yes, we support the 2x2 inch standard for US Visas.' }]
     },
     'compress-image-to-10kb': {
         title: 'Compress Image to 10KB | Resize Image for Legacy Portals | PixelResize',
         description: 'Need an image under 10KB? Our tool automatically compresses your image to under 10KB with iterative quality control.',
         h2: 'How to Get an Image Under 10KB',
-        body: '<p>Some legacy portals require images under 10KB. We use extreme optimization to reach this target while maintaining as much clarity as possible.</p>',
+        body: `<p>Some legacy portals require images under 10KB. We use extreme optimization to reach this target while maintaining as much clarity as possible. Also see <a href="/compress-image-to-50kb" onclick="event.preventDefault(); setTool('compress-image-to-50kb')">50KB</a> and <a href="/compress-image-to-100kb" onclick="event.preventDefault(); setTool('compress-image-to-100kb')">100KB</a> options.</p>`,
         faq: [{ q: 'Will it look blurry?', a: 'At 10KB, some artifacts are expected, but we prioritize visibility and meeting the strict file sized limit.' }]
     },
     'compress-image-to-50kb': {
         title: 'Compress Image to 50KB | Target Size Compressor | PixelResize',
         description: 'Need an image under 50KB? Our tool automatically compresses your image to exactly 50KB for job portals and applications.',
         h2: 'How to Get an Image Under 50KB for Official Forms',
-        body: '<p>Many job portals require 50KB limits. Our tool makes it easy to hit that target exactly with iterative quality adjustments.</p>',
+        body: `<p>Many job portals require 50KB limits. Our tool makes it easy to hit that target exactly with iterative quality adjustments. Try our <a href="/tools/image-resizer" onclick="event.preventDefault(); setTool('image-resizer')">resizer</a> if you need to change dimensions first.</p>`,
         faq: [
             { q: 'What if quality is too low?', a: 'We always try to maintain the highest quality possible within the 50KB limit.' }
         ]
@@ -168,7 +103,7 @@ const SEO_DATA = {
         title: 'Compress Image to 100KB | Resize Image for Web Forms | PixelResize',
         description: 'Automatically resize and compress images to under 100KB. Perfect for online forms and government application websites.',
         h2: 'Target 100KB Compression for Fast Applications',
-        body: '<p>Perfect for bank applications or government forms that require a 100KB file maximum. Our app handles the heavy lifting locally.</p>',
+        body: `<p>Perfect for bank applications or government forms that require a 100KB file maximum. Our app handles the heavy lifting locally. If 100KB is still too big, try our <a href="/compress-image-to-50kb" onclick="event.preventDefault(); setTool('compress-image-to-50kb')">50KB compressor</a>.</p>`,
         faq: [
             { q: 'Does it work for PNG?', a: 'Yes, but for small sizes like 100KB, it usually converts to JPG or WebP for better visual results.' }
         ]
@@ -177,32 +112,26 @@ const SEO_DATA = {
         title: 'Convert to AVIF Online | Next-Gen Image Compression | PixelResize',
         description: 'Convert your images to AVIF for the best possible compression ratios available today. Faster than JPEG and cleaner than WebP.',
         h2: 'Experience the Future with AVIF Conversion',
-        body: '<p>AVIF is the cutting edge of image technology. Use our <strong>AVIF converter</strong> to get the smallest possible files with zero visual quality loss.</p>',
+        body: `<p>AVIF is the cutting edge of image technology. Use our <strong>AVIF converter</strong> to get the smallest possible files with zero visual quality loss. AVIF is even smaller than <a href="/tools/jpg-to-webp" onclick="event.preventDefault(); setTool('jpg-to-webp')">WebP</a>.</p>`,
         faq: [
             { q: 'Is AVIF better than WebP?', a: 'Generally yes, AVIF provides about 20% better compression than WebP at the same visual quality.' }
         ]
-    },
-    'gif-to-webp': {
-        title: 'Convert GIF to WebP | Online Image Optimizer | PixelResize',
-        description: 'Convert heavy GIF files to WebP for smaller size and better web performance. Private, fast, and secure.',
-        h2: 'Optimize Animated Images with WebP',
-        body: '<p>Stop using heavy GIFs. Convert your <strong>GIF to WebP</strong> and maintain animation with half the file size.</p>',
-        faq: [{ q: 'Does WebP support animation?', a: 'Yes, WebP supports transparency and animation better than the aging GIF format.' }]
     },
     'heic-to-jpg': {
         title: 'HEIC to JPG Converter Online | iPhone & Apple Photo Converter',
         description: 'Convert iPhone HEIC photos to JPG instantly in your browser. Fast, free, and completely secure. No files leave your device.',
         h2: 'Make Your iPhone Photos Compatible Everywhere',
-        body: `
-            <p>Can\'t open HEIC files? Use our <strong>HEIC to JPG converter</strong> to transform your Apple photos into universally readable JPEG files in seconds.</p>
-            <h3>How to Convert HEIC to JPG?</h3>
-            <ol>
-                <li>Upload your HEIC file from your iPhone or Mac.</li>
-                <li>Wait a second for the local browser process to finish the conversion.</li>
-                <li>Download your new high-quality JPG image.</li>
-            </ol>
-        `,
+        body: `<p>Can\'t open HEIC files? Use our <strong>HEIC to JPG converter</strong> to transform your Apple photos into universally readable JPEG files in seconds. Once converted, you can <a href="/tools/image-resizer" onclick="event.preventDefault(); setTool('image-resizer')">resize</a> or <a href="/tools/image-compressor" onclick="event.preventDefault(); setTool('image-compressor')">compress</a> them easily.</p>`,
         faq: [{ q: 'What is HEIC?', a: 'HEIC is a high-efficiency format used by Apple devices that isn\'t always supported on Windows, Android, or legacy websites.' }]
+    },
+    'crop-image': {
+        title: 'Crop Image Online Free | Image Cropper Tool | PixelResize',
+        description: 'Perfectly frame your pictures with our free online image cropper. Standard presets for Instagram, 16:9, and custom ratios.',
+        h2: 'Precision Aspect Ratio Cropping Online',
+        body: `<p>Focus on what matters in your photos. Our <strong>image cropper</strong> provides precision control with standard aspect ratios like 1:1, 4:5, and 16:9. After cropping, you might want to <a href="/tools/jpg-to-webp" onclick="event.preventDefault(); setTool('jpg-to-webp')">convert to WebP</a> for your website.</p>`,
+        faq: [
+            { q: 'Can I crop to a specific aspect ratio?', a: 'Yes, we support 1:1, 4:3, 16:9, 9:16 and free-form cropping.' }
+        ]
     }
 };
 
