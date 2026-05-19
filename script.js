@@ -3,7 +3,7 @@ const SEO_DATA = {
     'home': {
         title: 'PixelResize | Free Online Image Resizer & Compressor | 100% Private',
         description: 'Free online image resizer and compressor. Resize image online free without quality loss. 100% private browser-based tool.',
-        h2: 'Ultimate Guide: How to Resize and Compress Images Effortlessly',
+        h2: 'How to Resize and Compress Images Effortlessly',
         body: `
             <p>PixelResize provides a suite of tools to help you <strong>resize image online free</strong> and <strong>compress image online free</strong> without compromising on detail. Our platform is built for speed and privacy, utilizing advanced browser APIs to ensure your data stays on your device.</p>
             <h3>Core Features of PixelResize</h3>
