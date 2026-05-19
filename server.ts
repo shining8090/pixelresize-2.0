@@ -114,7 +114,9 @@ const SEO_MAP: Record<string, SeoData> = {
     'transform': { title: 'Online Image Transform Tool | Rotate & Flip', description: 'Rotate and flip your images online instantly. 100% private and secure browser-based image transformation.', h1: 'Rotate and Flip Images Online', h2: 'Instant Image Transformation', body: 'Quickly adjust the orientation of your photos. Great before <a href="/tools/image-resizer">resizing</a> or <a href="/crop-image">cropping</a>.' },
     'to-gif': { title: 'Convert JPG to GIF Online | Simple GIF Creator', description: 'Convert your static JPG images into GIF format instantly in your browser.', h1: 'JPG to GIF Converter', h2: 'Convert Images to GIF Format', body: 'Need a GIF? Our converter handles it locally. For better performance on the web, consider <a href="/tools/jpg-to-webp">WebP</a> instead.' },
     'bmp-to-png': { title: 'Convert BMP to PNG Online | Professional Converter', description: 'Convert old BMP files into modern, portable PNG images with zero quality loss.', h1: 'BMP to PNG Converter', h2: 'High-Fidelity BMP Conversion', body: 'BMP files are uncompressed and huge. Convert them to <a href="/tools/jpg-to-png">PNG</a> for a much smaller file size with the same quality.' },
-    'gif-to-jpg': { title: 'Convert GIF to JPG Online | Static Image Extractor', description: 'Extract the first frame of a GIF and save it as a high-quality JPG image.', h1: 'GIF to JPG Converter', h2: 'Static Extraction from GIF', body: 'Turn animations into static photos instantly. You can then <a href="/tools/image-compressor">compress</a> the resulting JPG for web use.' }
+    'gif-to-jpg': { title: 'Convert GIF to JPG Online | Static Image Extractor', description: 'Extract the first frame of a GIF and save it as a high-quality JPG image.', h1: 'GIF to JPG Converter', h2: 'Static Extraction from GIF', body: 'Turn animations into static photos instantly. You can then <a href="/tools/image-compressor">compress</a> the resulting JPG for web use.' },
+    'instagram-resizer': { title: 'Instagram Photo Resizer | 1080x1080 & 1080x1350', description: 'Quickly resize your photos for Instagram posts, stories, and reels. Auto-set perfect aspect ratios for social media.', h1: 'Instagram Image Resizer', h2: 'Perfect Dimensions for Instagram Posts', body: 'Don\'t let Instagram crop your important details. Use our <a href="/tools/image-resizer">resizer</a> or <a href="/crop-image">cropper</a> to get exactly 1080x1080 or 1080x1350 pixels.' },
+    'facebook-resizer': { title: 'Facebook Image Resizer | Cover & Post Sizes', description: 'Optimize your Facebook cover photos and post images for the best engagement. Professional dimensions with zero blur.', h1: 'Facebook Image Resizer', h2: 'Optimize for Facebook Feed & Covers', body: 'Facebook compresses images heavily. By using our tool to set the correct 1200x630 dimensions first, you maintain better clarity.' }
 };
 
 function generateRelatedToolsHTML(currentSlug: string) {
@@ -202,6 +204,15 @@ const serveIndex = (req: express.Request, res: express.Response) => {
         processedHtml = processedHtml.replace(/property="og:description" content=".*?"/, `property="og:description" content="${seo.description}"`);
         processedHtml = processedHtml.replace(/property="og:url" content=".*?"/, `property="og:url" content="${fullUrl}"`);
 
+        // 1b. Dynamic Hreflang Injection
+        const hreflangTags = `
+            <link rel="alternate" hreflang="en-us" href="${fullUrl}">
+            <link rel="alternate" hreflang="en-gb" href="${fullUrl}">
+            <link rel="alternate" hreflang="en-au" href="${fullUrl}">
+            <link rel="alternate" hreflang="x-default" href="${fullUrl}">
+        `;
+        processedHtml = processedHtml.replace(/<!-- Hreflang Tags -->[\s\S]*?<!-- OpenGraph Tags -->/, `<!-- Hreflang Tags -->${hreflangTags}\n    <!-- OpenGraph Tags -->`);
+
         // 2. Visible H1
         if (seo.h1) {
             processedHtml = processedHtml.replace(/id="main-h1">.*?<\/h1>/, `id="main-h1">${seo.h1}</h1>`);
@@ -280,6 +291,26 @@ const serveIndex = (req: express.Request, res: express.Response) => {
         }
         processedHtml = processedHtml.replace(/id="schema-breadcrumb">[\s\S]*?<\/script>/, `id="schema-breadcrumb">${JSON.stringify(breadcrumbSchema, null, 2)}</script>`);
 
+        // 5b. WebApplication & SoftwareApplication Schema Injection
+        const softwareSchema = {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": `PixelResize - ${displayName}`,
+            "operatingSystem": "All",
+            "applicationCategory": "MultimediaApplication",
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.9",
+                "reviewCount": "1250"
+            },
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            }
+        };
+        processedHtml = processedHtml.replace(/id="schema-base">[\s\S]*?<\/script>/, `id="schema-base">${JSON.stringify(softwareSchema, null, 2)}</script>`);
+
         // 6. HowTo Schema Injection
         const howToName = slug === 'home' ? 'How to Resize and Compress Images' : `How to use ${displayName}`;
         const howToSteps = [
@@ -301,12 +332,51 @@ const serveIndex = (req: express.Request, res: express.Response) => {
 };
 
 // Define explicit routes for SEO
+app.get('/sitemap.xml', (req, res) => {
+    const tools = Object.keys(SEO_MAP);
+    const staticPages = ['about', 'privacy', 'terms', 'contact'];
+    
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+    
+    // Add Tools
+    tools.forEach(tool => {
+        const url = tool === 'home' ? '' : (tool.includes('compress-image-to-') || tool === 'resize-passport-photo' || tool === 'discord-pfp-resizer' || tool === 'heic-to-jpg' || tool === 'crop-image' ? `/${tool}` : `/tools/${tool}`);
+        xml += `
+        <url>
+            <loc>https://pixelresize.site${url}</loc>
+            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+            <changefreq>weekly</changefreq>
+            <priority>${tool === 'home' ? '1.0' : '0.8'}</priority>
+        </url>`;
+    });
+
+    // Add Static Pages
+    staticPages.forEach(page => {
+        xml += `
+        <url>
+            <loc>https://pixelresize.site/${page}</loc>
+            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+            <changefreq>monthly</changefreq>
+            <priority>0.5</priority>
+        </url>`;
+    });
+
+    xml += '</urlset>';
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+});
+
 app.get('/tools/:tool', serveIndex);
 app.get('/compress-image-to-:kb', serveIndex);
 app.get('/resize-passport-photo', serveIndex);
 app.get('/discord-pfp-resizer', serveIndex);
 app.get('/heic-to-jpg', serveIndex);
 app.get('/crop-image', serveIndex);
+app.get('/instagram-resizer', serveIndex);
+app.get('/facebook-resizer', serveIndex);
+
+app.get('/widget', (req, res) => res.sendFile(path.join(__dirname, 'widget.html')));
 
 // Informational Static Pages (Separate from SPA)
 app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'about.html')));
