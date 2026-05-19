@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /tools/
+Allow: /blog/
+Allow: /about
+Allow: /privacy
+Allow: /terms
+Allow: /contact
+
+# Sitemaps
+Sitemap: https://pixelresize.site/sitemap.xml

@@ -1,0 +1,6 @@
+{
+  "name": "PixelResize",
+  "description": "Privacy-focused browser-based image editing SaaS. Resize, compress, and convert images 100% locally with zero server uploads.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
