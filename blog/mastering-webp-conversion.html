@@ -32,6 +32,28 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [{
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://pixelresize.site/"
+      },{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Blog",
+        "item": "https://pixelresize.site/blog.html"
+      },{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Mastering WebP Conversion",
+        "item": "https://pixelresize.site/blog/mastering-webp-conversion.html"
+      }]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
       "@type": "BlogPosting",
       "headline": "Mastering WebP Conversion: Boost Site Speed by 30%",
       "image": "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?fit=crop&w=1200&h=630&q=80",
@@ -77,10 +99,18 @@
     <main>
         <section class="blog-post-header">
             <div class="container">
-                <nav class="breadcrumb">
-                    <a href="../">Home</a> <span>/</span>
-                    <a href="../blog.html">Blog</a> <span>/</span>
-                    <span>Mastering WebP Conversion</span>
+                <nav class="breadcrumb-nav" aria-label="Breadcrumb" style="padding-top: 0; padding-bottom: 0.75rem;">
+                    <ol class="flex lg:justify-start justify-center items-center text-[10px] sm:text-xs text-muted uppercase tracking-wider">
+                        <li class="flex items-center">
+                            <a href="../">Home</a>
+                            <span class="mx-2 opacity-30">→</span>
+                        </li>
+                        <li class="flex items-center">
+                            <a href="../blog.html">Blog</a>
+                            <span class="mx-2 opacity-30">→</span>
+                        </li>
+                        <li class="font-bold text-primary" aria-current="page">WebP Conversion</li>
+                    </ol>
                 </nav>
                 <span class="category-badge">Optimization</span>
                 <h1 class="hero-title">Mastering WebP Conversion: Boost Site Speed by 30%</h1>

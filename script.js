@@ -206,7 +206,7 @@ const SEO_DATA = {
     }
 };
 
-function updateSEO(tool) {
+function updateSEO(tool, displayName = 'Editor') {
     const data = SEO_DATA[tool] || SEO_DATA['home'];
     
     // Update Document Title
@@ -289,31 +289,6 @@ function updateSEO(tool) {
     const ogDesc = document.querySelector('meta[property="og:description"]');
     if (ogDesc) ogDesc.setAttribute('content', data.description);
 
-    // Update Breadcrumbs UI (Nav)
-    const breadcrumbCurrentNav = document.getElementById('breadcrumb-current-nav');
-    const breadcrumbParentNav = document.getElementById('breadcrumb-parent-nav');
-    
-    let displayName = tool === 'home' ? 'Editor' : tool.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    
-    // Custom mappings for cleaner breadcrumbs
-    if (tool === 'image-resizer') displayName = 'Resize';
-    if (tool === 'image-compressor') displayName = 'Compress';
-    if (tool === 'crop-image') displayName = 'Crop';
-    if (tool === 'discord-pfp-resizer') displayName = 'Discord';
-    if (tool === 'resize-passport-photo') displayName = 'Passport';
-    if (tool === 'heic-to-jpg') displayName = 'HEIC';
-    if (tool.startsWith('compress-image-to-')) displayName = tool.split('-').pop().toUpperCase();
-
-    if (breadcrumbCurrentNav) breadcrumbCurrentNav.textContent = displayName;
-
-    if (tool === 'home') {
-        breadcrumbParentNav?.classList.add('hidden');
-        breadcrumbParentNav?.classList.remove('flex');
-    } else {
-        breadcrumbParentNav?.classList.remove('hidden');
-        breadcrumbParentNav?.classList.add('flex');
-    }
-
     // Update Related Tools
     const relatedList = document.getElementById('related-tools-list');
     if (relatedList) {
@@ -333,14 +308,20 @@ function updateSEO(tool) {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             "itemListElement": [
-                { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://pixelresize.site" }
+                { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://pixelresize.site/" }
             ]
         };
-        if (tool !== 'home') {
-            const toolUrl = tool.includes('compress-image-to-') ? `https://pixelresize.site/${tool}` : `https://pixelresize.site/tools/${tool}`;
+        if (tool !== 'home' && tool !== '') {
             breadcrumb.itemListElement.push({
                 "@type": "ListItem",
                 "position": 2,
+                "name": "Tools",
+                "item": "https://pixelresize.site/tools/"
+            });
+            const toolUrl = tool.includes('compress-image-to-') ? `https://pixelresize.site/${tool}` : `https://pixelresize.site/tools/${tool}`;
+            breadcrumb.itemListElement.push({
+                "@type": "ListItem",
+                "position": 3,
                 "name": displayName,
                 "item": toolUrl
             });
@@ -628,6 +609,15 @@ function setupEventListeners() {
     applyBtn.addEventListener('click', () => applyChanges());
     downloadBtn.addEventListener('click', handleDownload);
     removeImgBtn.addEventListener('click', resetApp);
+
+    // Global Tool Click Delegation (SEO Stability Fix)
+    document.addEventListener('click', (e) => {
+        const card = e.target.closest('[data-tool]');
+        if (card) {
+            e.preventDefault();
+            setTool(card.dataset.tool, true);
+        }
+    });
 
     setupCropEngine();
 }
@@ -1063,6 +1053,13 @@ function setTool(tool, forceOpen = false) {
     // Reset special modes
     document.body.classList.remove('mode-discord-pfp-resizer', 'mode-resize-passport-photo', 'mode-heic-to-jpg');
     
+    // Auto-open image upload dialog if requested
+    if (forceOpen && !currentImage) {
+        requestAnimationFrame(() => {
+            if (fileInput) fileInput.click();
+        });
+    }
+
     // Reset special controls
     if (specialContainer) {
         specialContainer.classList.add('hidden');
@@ -1148,6 +1145,42 @@ function setTool(tool, forceOpen = false) {
         targetTab = 'crop';
     }
 
+    // Update Breadcrumb Navigation UI
+    const breadcrumbCurrentNav = document.getElementById('breadcrumb-current-nav');
+    const breadcrumbParentNav = document.getElementById('breadcrumb-parent-nav');
+    const breadcrumbNav = document.querySelector('.breadcrumb-nav');
+    const breadcrumbHomeLink = document.getElementById('breadcrumb-home-link');
+    
+    let displayName = (tool === 'home' || tool === '') ? 'Home' : tool.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    
+    // Custom mappings for cleaner breadcrumbs
+    if (tool === 'image-resizer') displayName = 'Resize Image';
+    if (tool === 'image-compressor') displayName = 'Compress Image';
+    if (tool === 'crop-image') displayName = 'Crop Image';
+    if (tool === 'discord-pfp-resizer') displayName = 'Discord PFP';
+    if (tool === 'resize-passport-photo') displayName = 'Passport Photo';
+    if (tool === 'heic-to-jpg') displayName = 'HEIC to JPG';
+    if (typeof tool === 'string' && tool.startsWith('compress-image-to-')) {
+        displayName = `Compress to ${tool.split('-').pop().toUpperCase()}`;
+    }
+
+    if (breadcrumbCurrentNav) breadcrumbCurrentNav.textContent = displayName;
+
+    if (tool === 'home' || tool === '') {
+        breadcrumbParentNav?.classList.add('hidden');
+        breadcrumbHomeLink?.classList.add('font-bold', 'text-primary');
+        breadcrumbHomeLink?.querySelector('a')?.classList.add('pointer-events-none');
+        breadcrumbCurrentNav?.parentElement?.classList.add('hidden');
+    } else {
+        breadcrumbParentNav?.classList.remove('hidden');
+        breadcrumbParentNav?.classList.add('flex');
+        breadcrumbHomeLink?.classList.remove('font-bold', 'text-primary');
+        breadcrumbHomeLink?.querySelector('a')?.classList.remove('pointer-events-none');
+        breadcrumbCurrentNav?.parentElement?.classList.remove('hidden');
+        breadcrumbCurrentNav?.parentElement?.classList.add('flex');
+    }
+    breadcrumbNav?.classList.remove('sr-only');
+
     const tabBtn = document.querySelector(`.tab-btn[data-tab="${targetTab}"]`);
     if (tabBtn) {
         tabBtn.click();
@@ -1164,26 +1197,8 @@ function setTool(tool, forceOpen = false) {
         }
     }
     
-    // Auto-open image upload dialog if explicitly requested and safe
-    const params = new URLSearchParams(window.location.search);
-    const shouldAutoOpen = (forceOpen || params.get('open') === '1');
-    
-    if (shouldAutoOpen && !currentImage && !window._uploadTriggered) {
-        // Mark as triggered to avoid duplicate popups
-        window._uploadTriggered = true;
-        
-        setTimeout(() => {
-            if (fileInput) {
-                fileInput.click();
-            }
-            // Reset trigger after short delay to allow manual clicks to work later if needed
-            // but prevent immediate double-popups from load + setTool race
-            setTimeout(() => { window._uploadTriggered = false; }, 1000);
-        }, 150);
-    }
-    
     // Update SEO
-    updateSEO(tool); 
+    updateSEO(tool, displayName); 
 
     // Update URL without reload
     let cleanUrl = '/';
