@@ -1345,3 +1345,147 @@ img {
     flex-direction: column;
   }
 }
+
+/* ==========================================
+   MOBILE & RESPONSIVE UI/UX OPTIMIZATIONS
+   ========================================== */
+
+/* Mobile Hamburger Menu */
+.nav-toggle-label {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 18px;
+    cursor: pointer;
+    z-index: 1010;
+}
+
+.nav-toggle-label .bar {
+    width: 100%;
+    height: 2px;
+    background-color: var(--text-heading);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .nav-toggle-label {
+        display: flex;
+    }
+
+    .nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border-bottom: 1px solid var(--border);
+        flex-direction: column;
+        gap: 0 !important;
+        padding: 10px 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-link {
+        display: block;
+        padding: 14px 24px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.02);
+    }
+
+    .header-actions {
+        display: none !important;
+    }
+
+    .nav-toggle-checkbox:checked ~ .nav {
+        max-height: 300px;
+    }
+
+    .nav-toggle-checkbox:checked ~ .nav-toggle-label .bar:nth-child(1) {
+        transform: translateY(8px) rotate(45deg);
+    }
+
+    .nav-toggle-checkbox:checked ~ .nav-toggle-label .bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .nav-toggle-checkbox:checked ~ .nav-toggle-label .bar:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
+    }
+}
+
+/* Hero, Upload Container & Tab Layout Optimizations */
+@media (max-width: 640px) {
+    .hero {
+        padding: 40px 0 60px;
+    }
+    
+    .hero-title {
+        font-size: 2.2rem !important;
+        letter-spacing: -0.03em;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+        padding: 0 10px;
+    }
+    
+    .upload-container {
+        padding: 40px 20px !important;
+        border-radius: 16px;
+    }
+    
+    .upload-icon-wrapper {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .upload-icon-wrapper svg {
+        width: 32px;
+        height: 32px;
+    }
+    
+    /* Horizontal Swiping for Editor Tabs */
+    .tool-tabs {
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        display: flex !important;
+        gap: 6px !important;
+        padding: 6px !important;
+        margin: 10px !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    
+    .tool-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .tab-btn {
+        flex: 0 0 auto !important;
+        padding: 8px 16px !important;
+    }
+
+    /* Padding Adjustments */
+    .preview-wrapper {
+        padding: 16px !important;
+        min-height: 280px !important;
+    }
+    
+    .tab-content-wrapper {
+        padding: 0 16px 16px !important;
+    }
+    
+    .grid-2, .grid-3, .grid-4 {
+        gap: 16px !important;
+    }
+    
+    .breadcrumb-nav {
+        margin-bottom: 12px !important;
+    }
+}
+

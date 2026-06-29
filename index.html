@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>(function(s){s.dataset.zone='11217193',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
@@ -69,8 +70,6 @@
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2486732565949048" crossorigin="anonymous"></script>
 </head>
 <body>
     <!-- Sticky Header -->
@@ -80,11 +79,19 @@
                 <span class="logo-icon">P</span>
                 <span class="logo-text">Pixel<span>Resize</span></span>
             </a>
+            
+            <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox hidden">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Toggle mobile menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </label>
+
             <nav class="nav">
-                <a href="#tools" class="nav-link" onclick="event.preventDefault(); document.getElementById('tools').scrollIntoView({behavior: 'smooth'})">Tools</a>
-                <a href="#how-it-works" class="nav-link" onclick="event.preventDefault(); document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})">How it Works</a>
-                <a href="#faq" class="nav-link" onclick="event.preventDefault(); document.getElementById('faq').scrollIntoView({behavior: 'smooth'})">FAQ</a>
-                <a href="#blog" class="nav-link" onclick="event.preventDefault(); document.getElementById('blog').scrollIntoView({behavior: 'smooth'})">Blog</a>
+                <a href="#tools" class="nav-link" onclick="document.getElementById('nav-toggle').checked=false; event.preventDefault(); document.getElementById('tools').scrollIntoView({behavior: 'smooth'})">Tools</a>
+                <a href="#how-it-works" class="nav-link" onclick="document.getElementById('nav-toggle').checked=false; event.preventDefault(); document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})">How it Works</a>
+                <a href="#faq" class="nav-link" onclick="document.getElementById('nav-toggle').checked=false; event.preventDefault(); document.getElementById('faq').scrollIntoView({behavior: 'smooth'})">FAQ</a>
+                <a href="#blog" class="nav-link" onclick="document.getElementById('nav-toggle').checked=false; event.preventDefault(); document.getElementById('blog').scrollIntoView({behavior: 'smooth'})">Blog</a>
             </nav>
             <div class="header-actions">
                 <a href="#tools" class="btn btn-primary btn-sm" onclick="event.preventDefault(); document.getElementById('tools').scrollIntoView({behavior: 'smooth'})">Get Started</a>
