@@ -383,6 +383,9 @@ app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'about.html'))
 app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'privacy.html')));
 app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'terms.html')));
 app.get('/contact', (req, res) => res.sendFile(path.join(__dirname, 'contact.html')));
+app.get('/editorial-policy', (req, res) => res.sendFile(path.join(__dirname, 'editorial-policy.html')));
+app.get('/authors', (req, res) => res.sendFile(path.join(__dirname, 'authors.html')));
+app.get('/changelog', (req, res) => res.sendFile(path.join(__dirname, 'changelog.html')));
 
 app.get('/tools/image-resizer', serveIndex);
 app.get('/tools/image-compressor', serveIndex);

@@ -54,6 +54,7 @@
     {
       "@context": "https://schema.org",
       "@type": "Organization",
+      "@id": "https://pixelresize.site/#organization",
       "name": "PixelResize",
       "url": "https://pixelresize.site",
       "logo": "https://pixelresize.site/logo.png",
@@ -63,7 +64,62 @@
       ]
     }
     </script>
-    <script type="application/ld+json" id="schema-base"></script>
+    <script type="application/ld+json" id="schema-base">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "PixelResize",
+        "operatingSystem": "All",
+        "applicationCategory": "MultimediaApplication",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "browser based",
+          "free",
+          "image editing",
+          "compression",
+          "conversion",
+          "privacy"
+        ],
+        "browserRequirements": "Requires HTML5 compatible browser."
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "PixelResize",
+        "url": "https://pixelresize.site",
+        "publisher": {
+          "@id": "https://pixelresize.site/#organization"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://pixelresize.site/blog.html?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": "How to Resize and Compress Images with PixelResize",
+        "description": "Learn how to resize, compress, and convert images online for free using PixelResize. Process your images safely inside your browser.",
+        "thumbnailUrl": [
+          "https://pixelresize.site/thumbnails/1x1.jpg",
+          "https://pixelresize.site/thumbnails/4x3.jpg",
+          "https://pixelresize.site/thumbnails/16x9.jpg"
+        ],
+        "uploadDate": "2026-07-04T00:00:00-07:00",
+        "duration": "PT2M30S",
+        "embedUrl": "https://www.youtube.com/embed/placeholder_video_id"
+      }
+    ]
+    </script>
     <script type="application/ld+json" id="schema-faq-static"></script>
     <script type="application/ld+json" id="schema-howto"></script>
     <!-- Styles -->
@@ -106,7 +162,7 @@
         <section class="hero" id="home" aria-labelledby="main-h1">
             <div class="container text-center">
                 <nav class="breadcrumb-nav mb-4" aria-label="Breadcrumb">
-                    <ol class="flex justify-center items-center text-[10px] sm:text-xs text-muted uppercase tracking-wider" id="breadcrumb-list-nav">
+                    <ol class="flex justify-start items-center text-[10px] sm:text-xs text-muted uppercase tracking-wider" id="breadcrumb-list-nav">
                         <li class="flex items-center" id="breadcrumb-home-link">
                             <a href="/" onclick="event.preventDefault(); setTool('home')" class="hover:text-primary transition-colors">Home</a>
                         </li>
@@ -692,9 +748,12 @@
             <div class="footer-col">
                 <h4 class="font-bold mb-4 text-primary uppercase text-xs tracking-widest">Company</h4>
                 <a href="/about" class="footer-link hover:text-white">About Us</a>
-                <a href="/blog.html" class="footer-link hover:text-white">Blog</a>
+                <a href="/authors" class="footer-link hover:text-white">Our Authors</a>
+                <a href="/editorial-policy" class="footer-link hover:text-white">Editorial Policy</a>
                 <a href="/privacy" class="footer-link hover:text-white">Privacy Policy</a>
                 <a href="/terms" class="footer-link hover:text-white">Terms of Service</a>
+                <a href="/contact" class="footer-link hover:text-white">Support & Contact</a>
+                <a href="/changelog" class="footer-link hover:text-white">Changelog</a>
             </div>
         </div>
         <div class="container footer-bottom text-center mt-12 pt-8 border-t border-slate-800">

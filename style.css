@@ -620,7 +620,7 @@ ul {
 
 .breadcrumb-nav {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start !important;
     padding: 0.5rem 0 0.5rem;
 }
 
@@ -630,8 +630,9 @@ ul {
     margin: 0;
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    white-space: nowrap;
 }
 
 .breadcrumb-nav li {
