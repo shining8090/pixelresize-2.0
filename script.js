@@ -135,6 +135,9 @@ const SEO_DATA = {
     }
 };
 
+let originalHomeH2 = '';
+let originalHomeBody = '';
+
 function updateSEO(tool, displayName = 'Editor') {
     const data = SEO_DATA[tool] || SEO_DATA['home'];
     
@@ -159,10 +162,22 @@ function updateSEO(tool, displayName = 'Editor') {
 
     // Update H2 and Body
     const dynamicH2 = document.getElementById('dynamic-h2');
-    if (dynamicH2 && data.h2) dynamicH2.innerHTML = data.h2;
+    if (dynamicH2) {
+        if (tool === 'home' && originalHomeH2) {
+            dynamicH2.innerHTML = originalHomeH2;
+        } else if (data.h2) {
+            dynamicH2.innerHTML = data.h2;
+        }
+    }
     
     const dynamicBody = document.getElementById('dynamic-body');
-    if (dynamicBody && data.body) dynamicBody.innerHTML = data.body;
+    if (dynamicBody) {
+        if (tool === 'home' && originalHomeBody) {
+            dynamicBody.innerHTML = originalHomeBody;
+        } else if (data.body) {
+            dynamicBody.innerHTML = data.body;
+        }
+    }
 
     // Update FAQ + Schema (AI search signal)
     const faqContainer = document.querySelector('.faq-container');
@@ -1162,6 +1177,12 @@ window.setTool = setTool;
 
 // Initial Page Load Fix
 window.addEventListener('load', () => {
+    // Cache original home SEO elements
+    const dynamicH2 = document.getElementById('dynamic-h2');
+    const dynamicBody = document.getElementById('dynamic-body');
+    if (dynamicH2) originalHomeH2 = dynamicH2.innerHTML;
+    if (dynamicBody) originalHomeBody = dynamicBody.innerHTML;
+
     // Initialize app components
     setupEventListeners();
     setupNavigationProtection();

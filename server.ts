@@ -219,10 +219,10 @@ const serveIndex = (req: express.Request, res: express.Response) => {
         }
 
         // 3. Dynamic Section Content (H2 and Body)
-        if (seo.h2) {
+        if (slug !== 'home' && seo.h2) {
             processedHtml = processedHtml.replace(/id="dynamic-h2">.*?<\/h2>/, `id="dynamic-h2">${seo.h2}</h2>`);
         }
-        if (seo.body) {
+        if (slug !== 'home' && seo.body) {
             processedHtml = processedHtml.replace(/<div id="dynamic-body">[\s\S]*?<\/div>/, `<div id="dynamic-body">${seo.body}</div>`);
         }
 
