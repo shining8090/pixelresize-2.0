@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2486732565949048"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelResize - Redirecting...</title>
+    <script>
+        // GitHub Pages SPA & Static Route Handling
+        (function() {
+            var l = window.location;
+            var path = l.pathname;
+            
+            // Normalize path (remove trailing slashes if any)
+            if (path.length > 1 && path.endsWith('/')) {
+                path = path.slice(0, -1);
+            }
+
+            // Static HTML pages map
+            var staticPages = {
+                '/about': '/about.html',
+                '/authors': '/authors.html',
+                '/blog': '/blog.html',
+                '/changelog': '/changelog.html',
+                '/contact': '/contact.html',
+                '/editorial-policy': '/editorial-policy.html',
+                '/privacy': '/privacy.html',
+                '/terms': '/terms.html'
+            };
+
+            if (staticPages[path]) {
+                var target = staticPages[path] + l.search + l.hash;
+                window.location.replace(target);
+                return;
+            }
+
+            // SPA Route redirection for GitHub Pages
+            // Converts e.g. https://pixelresize.site/tools/image-resizer?open=1
+            // into https://pixelresize.site/?/tools/image-resizer&open=1
+            var segmentCount = 0; // 0 for custom domain root or user.github.io root
+            var pathSegments = path.split('/');
+            
+            var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+                pathSegments.slice(0, 1 + segmentCount).join('/') + '/?/' +
+                path.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+                (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+                l.hash;
+
+            window.location.replace(redirectUrl);
+        })();
+    </script>
+</head>
+<body style="font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #0f172a; color: #f8fafc;">
+    <div style="text-align: center;">
+        <h2 style="margin-bottom: 8px;">Loading PixelResize...</h2>
+        <p style="color: #94a3b8; margin: 0;">Redirecting to requested tool...</p>
+    </div>
+</body>
+</html>

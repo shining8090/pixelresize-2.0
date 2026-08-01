@@ -108,6 +108,15 @@ const SEO_DATA = {
             { q: 'Does it work for PNG?', a: 'Yes, but for small sizes like 100KB, it usually converts to JPG or WebP for better visual results.' }
         ]
     },
+    'compress-image-to-200kb': {
+        title: 'Compress Image to 200KB | Target Size Compressor | PixelResize',
+        description: 'Need an image under 200KB? Our tool automatically compresses your image to exactly 200KB for high-quality web use.',
+        h2: 'Target 200KB Image Compression',
+        body: `<p>Perfect for hero images on blogs and websites. Pair this with our <a href="/crop-image" onclick="event.preventDefault(); setTool('crop-image')">cropping tool</a> for the best layout.</p>`,
+        faq: [
+            { q: 'Why target 200KB?', a: '200KB strikes the perfect balance between high visual fidelity and fast website load times.' }
+        ]
+    },
     'to-avif': {
         title: 'Convert to AVIF Online | Next-Gen Image Compression | PixelResize',
         description: 'Convert your images to AVIF for the best possible compression ratios available today. Faster than JPEG and cleaner than WebP.',
@@ -115,6 +124,33 @@ const SEO_DATA = {
         body: `<p>AVIF is the cutting edge of image technology. Use our <strong>AVIF converter</strong> to get the smallest possible files with zero visual quality loss. AVIF is even smaller than <a href="/tools/jpg-to-webp" onclick="event.preventDefault(); setTool('jpg-to-webp')">WebP</a>.</p>`,
         faq: [
             { q: 'Is AVIF better than WebP?', a: 'Generally yes, AVIF provides about 20% better compression than WebP at the same visual quality.' }
+        ]
+    },
+    'to-gif': {
+        title: 'Convert JPG to GIF Online | Simple GIF Creator | PixelResize',
+        description: 'Convert your static JPG images into GIF format instantly in your browser.',
+        h2: 'Convert Images to GIF Format',
+        body: `<p>Need a GIF? Our converter handles it locally. For better performance on the web, consider <a href="/tools/jpg-to-webp" onclick="event.preventDefault(); setTool('jpg-to-webp')">WebP</a> instead.</p>`,
+        faq: [
+            { q: 'Can I convert static images to GIF?', a: 'Yes, our tool seamlessly converts static JPEGs and PNGs into GIF format.' }
+        ]
+    },
+    'bmp-to-png': {
+        title: 'Convert BMP to PNG Online | Professional Converter | PixelResize',
+        description: 'Convert old BMP files into modern, portable PNG images with zero quality loss.',
+        h2: 'High-Fidelity BMP Conversion',
+        body: `<p>BMP files are uncompressed and huge. Convert them to <a href="/tools/jpg-to-png" onclick="event.preventDefault(); setTool('jpg-to-png')">PNG</a> for a much smaller file size with the same quality.</p>`,
+        faq: [
+            { q: 'Is BMP to PNG lossless?', a: 'Yes, PNG is a lossless format so no image details are lost.' }
+        ]
+    },
+    'gif-to-jpg': {
+        title: 'Convert GIF to JPG Online | Static Image Extractor | PixelResize',
+        description: 'Extract the first frame of a GIF and save it as a high-quality JPG image.',
+        h2: 'Static Extraction from GIF',
+        body: `<p>Turn animations into static photos instantly. You can then <a href="/tools/image-compressor" onclick="event.preventDefault(); setTool('image-compressor')">compress</a> the resulting JPG for web use.</p>`,
+        faq: [
+            { q: 'Will this convert animated GIFs?', a: 'It extracts the primary keyframe and saves it as a high-quality JPEG.' }
         ]
     },
     'heic-to-jpg': {
@@ -131,6 +167,33 @@ const SEO_DATA = {
         body: `<p>Focus on what matters in your photos. Our <strong>image cropper</strong> provides precision control with standard aspect ratios like 1:1, 4:5, and 16:9. After cropping, you might want to <a href="/tools/jpg-to-webp" onclick="event.preventDefault(); setTool('jpg-to-webp')">convert to WebP</a> for your website.</p>`,
         faq: [
             { q: 'Can I crop to a specific aspect ratio?', a: 'Yes, we support 1:1, 4:3, 16:9, 9:16 and free-form cropping.' }
+        ]
+    },
+    'instagram-resizer': {
+        title: 'Instagram Photo Resizer | 1080x1080 & 1080x1350 | PixelResize',
+        description: 'Quickly resize your photos for Instagram posts, stories, and reels. Auto-set perfect aspect ratios for social media.',
+        h2: 'Perfect Dimensions for Instagram Posts',
+        body: `<p>Don't let Instagram crop your important details. Use our <a href="/tools/image-resizer" onclick="event.preventDefault(); setTool('image-resizer')">resizer</a> or <a href="/crop-image" onclick="event.preventDefault(); setTool('crop-image')">cropper</a> to get exactly 1080x1080 or 1080x1350 pixels.</p>`,
+        faq: [
+            { q: 'What size is best for Instagram posts?', a: '1080x1080 for square posts, and 1080x1350 for portrait posts.' }
+        ]
+    },
+    'facebook-resizer': {
+        title: 'Facebook Image Resizer | Cover & Post Sizes | PixelResize',
+        description: 'Optimize your Facebook cover photos and post images for the best engagement. Professional dimensions with zero blur.',
+        h2: 'Optimize for Facebook Feed & Covers',
+        body: `<p>Facebook compresses images heavily. By using our tool to set the correct 1200x630 dimensions first, you maintain better clarity.</p>`,
+        faq: [
+            { q: 'What is the standard Facebook link image size?', a: '1200x630 pixels is recommended for shared Facebook links and cover images.' }
+        ]
+    },
+    'transform': {
+        title: 'Online Image Transform Tool | Rotate & Flip | PixelResize',
+        description: 'Rotate and flip your images online instantly. 100% private and secure browser-based image transformation.',
+        h2: 'Instant Image Transformation',
+        body: `<p>Quickly adjust the orientation of your photos. Great before <a href="/tools/image-resizer" onclick="event.preventDefault(); setTool('image-resizer')">resizing</a> or <a href="/crop-image" onclick="event.preventDefault(); setTool('crop-image')">cropping</a>.</p>`,
+        faq: [
+            { q: 'Can I flip images horizontally and vertically?', a: 'Yes, our transform tool supports instant 90-degree rotations and horizontal/vertical flipping.' }
         ]
     }
 };
@@ -369,13 +432,19 @@ function handleInitialRoute() {
     const path = window.location.pathname;
     const hash = window.location.hash;
     
+    // Check for SPA redirected parameters e.g. ?/tools/image-resizer or ?p=/tools/image-resizer
+    const redirectParam = params.get('p') || (window.location.search.startsWith('?/') ? window.location.search.slice(2).split('&')[0] : null);
+    
     // 1. Prioritize direct URL parameters if present
-    const toolParam = params.get('tool');
+    const toolParam = params.get('tool') || redirectParam;
     const formatParam = params.get('format');
     const sizeParam = params.get('size');
     
     if (toolParam) {
-        setTool(toolParam, params.get('open') === '1');
+        let cleanTool = toolParam;
+        if (cleanTool.startsWith('/tools/')) cleanTool = cleanTool.replace('/tools/', '');
+        if (cleanTool.startsWith('/')) cleanTool = cleanTool.replace('/', '');
+        setTool(cleanTool, params.get('open') === '1');
         
         // Handle format and size overrides from URL
         if (formatParam) {
@@ -395,15 +464,15 @@ function handleInitialRoute() {
     }
 
     // 2. Fallback to path-based routing
-    if (['/resize-passport-photo', '/discord-pfp-resizer', '/heic-to-jpg', '/crop-image'].includes(path)) {
+    if (['/resize-passport-photo', '/discord-pfp-resizer', '/heic-to-jpg', '/crop-image', '/instagram-resizer', '/facebook-resizer'].includes(path)) {
         const tool = path.replace('/', '');
         setTool(tool, params.get('open') === '1');
     } else if (path.includes('/tools/')) {
         const tool = path.split('/tools/')[1];
         setTool(tool, params.get('open') === '1');
     } else if (path.includes('/compress-image-to-')) {
-        const kb = path.split('/compress-image-to-')[1].replace('kb', '');
-        setTool(`resize_${kb}kb`, params.get('open') === '1');
+        const tool = path.replace('/', '');
+        setTool(tool, params.get('open') === '1');
     } else if (hash) {
         setTool(hash.substring(1), params.get('open') === '1');
     } else {
@@ -560,6 +629,42 @@ function setupEventListeners() {
         if (card) {
             e.preventDefault();
             setTool(card.dataset.tool, true);
+        }
+    });
+
+    // Global delegation for internal tool links to prevent full page reloads & 404s
+    document.body.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (!link) return;
+        
+        const href = link.getAttribute('href');
+        if (!href) return;
+        
+        // Skip external, mailto, tel, target=_blank, javascript:, or download links
+        if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:') || link.target === '_blank' || link.hasAttribute('download')) {
+            return;
+        }
+
+        // Determine tool slug
+        let toolSlug = null;
+        const openParam = href.includes('open=1');
+
+        if (href.startsWith('/tools/')) {
+            toolSlug = href.split('/tools/')[1].split('?')[0].split('#')[0];
+        } else if (href.includes('compress-image-to-')) {
+            toolSlug = href.split('?')[0].split('#')[0].replace('/', '');
+        } else if (['/discord-pfp-resizer', '/resize-passport-photo', '/heic-to-jpg', '/crop-image', '/instagram-resizer', '/facebook-resizer', '/transform'].some(p => href.startsWith(p))) {
+            toolSlug = href.split('?')[0].split('#')[0].replace('/', '');
+        } else if (href.startsWith('/#') || (href.startsWith('#') && href.length > 1)) {
+            const hashTarget = href.replace('/#', '').replace('#', '');
+            if (['resize', 'compress', 'convert', 'target', 'crop', 'transform'].includes(hashTarget)) {
+                toolSlug = hashTarget;
+            }
+        }
+
+        if (toolSlug) {
+            e.preventDefault();
+            setTool(toolSlug, openParam);
         }
     });
 
@@ -1051,6 +1156,21 @@ function setTool(tool, forceOpen = false) {
     } else if (tool === 'heic-to-jpg' || tool === 'heic') {
         targetTab = 'convert';
         format = 'image/jpeg';
+    } else if (tool === 'instagram-resizer' || tool === 'instagram') {
+        targetTab = 'resize';
+        resizeW.value = 1080;
+        resizeH.value = 1080;
+        maintainRatio.checked = true;
+        cropState.aspectRatio = 1;
+        document.querySelectorAll('#aspect-ratio-presets .btn-chip').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.ratio === '1');
+        });
+    } else if (tool === 'facebook-resizer' || tool === 'facebook') {
+        targetTab = 'resize';
+        resizeW.value = 1200;
+        resizeH.value = 630;
+        maintainRatio.checked = true;
+        cropState.aspectRatio = 1.91;
     } else if (tool.startsWith('resize_') || tool.startsWith('compress-image-to-') || tool === 'target') {
         targetTab = 'target';
         const parts = tool.split('-');
@@ -1151,8 +1271,8 @@ function setTool(tool, forceOpen = false) {
     if (['home'].includes(targetTab)) urlSlug = 'home';
 
     if (urlSlug !== 'home') {
-        const dedicatedTools = ['discord-pfp-resizer', 'resize-passport-photo', 'heic-to-jpg', 'crop-image'];
-        const seoTools = ['image-resizer', 'image-compressor', 'jpg-to-png', 'png-to-jpg', 'jpg-to-webp', 'to-avif', 'to-gif', 'compress-image-to-10kb', 'compress-image-to-50kb', 'compress-image-to-100kb', 'compress-image-to-200kb'];
+        const dedicatedTools = ['discord-pfp-resizer', 'resize-passport-photo', 'heic-to-jpg', 'crop-image', 'instagram-resizer', 'facebook-resizer'];
+        const seoTools = ['image-resizer', 'image-compressor', 'jpg-to-png', 'png-to-jpg', 'jpg-to-webp', 'to-avif', 'to-gif', 'bmp-to-png', 'gif-to-jpg', 'transform', 'compress-image-to-10kb', 'compress-image-to-50kb', 'compress-image-to-100kb', 'compress-image-to-200kb'];
         
         if (dedicatedTools.includes(urlSlug)) {
             cleanUrl = `/${urlSlug}`;
