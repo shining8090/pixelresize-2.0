@@ -1275,12 +1275,12 @@ function setTool(tool, forceOpen = false) {
         const seoTools = ['image-resizer', 'image-compressor', 'jpg-to-png', 'png-to-jpg', 'jpg-to-webp', 'to-avif', 'to-gif', 'bmp-to-png', 'gif-to-jpg', 'transform', 'compress-image-to-10kb', 'compress-image-to-50kb', 'compress-image-to-100kb', 'compress-image-to-200kb'];
         
         if (dedicatedTools.includes(urlSlug)) {
-            cleanUrl = `/${urlSlug}`;
+            cleanUrl = `/${urlSlug}/`;
         } else if (seoTools.includes(urlSlug)) {
             if (urlSlug.startsWith('compress-image-to-')) {
                 cleanUrl = `/${urlSlug}`;
             } else {
-                cleanUrl = `/tools/${urlSlug}`;
+                cleanUrl = `/tools/${urlSlug}/`;
             }
         } else {
             cleanUrl = `/#${targetTab}`;
