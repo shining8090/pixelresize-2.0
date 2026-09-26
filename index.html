@@ -545,7 +545,7 @@
                         <ul>
                             <li><strong>Inviolable Data Privacy:</strong> Your images are never sent to external servers, processed on cloud virtual machines, or saved to transient databases. Your files remain on your device, under your control.</li>
                             <li><strong>Instant Processing Speed:</strong> By eliminating the upload and download bottlenecks, files are processed instantly. There is zero delay from network latency or server queues.</li>
-                            <li><strong>Bandwidth Conservation:</strong> Because no image data is transferred over the internet, you can optimize hundreds of files without consuming valuable mobile data or broadband limits.</li>
+                            <li><strong>Bandwidth Conservation:</strong> Because no image data is transferred over the internet, you can optimize images without sending them to a remote processing server.</li>
                         </ul>
 
                         <h3>Deep Dive into the Optimization Toolset</h3>
@@ -573,10 +573,10 @@
                         </ul>
 
                         <h3>Catering to Strict Portal Limits: The Target Size Solution</h3>
-                        <p>Many academic portals, banking institutions, and government job boards impose rigid digital constraints on document submissions, often requiring passport photos or scanned signatures to be under a strict limit, such as 50KB or 100KB. Attempting to achieve these thresholds manually through repeated resizing and compression guesses is an incredibly frustrating process. To solve this, PixelResize features a specialized target size engine. By selecting one of our target buttons, the algorithm dynamically runs iterative binary-search compression loops on your local device, adjusting the quality threshold until the output file fits precisely under your selected limit without sacrificing visual legibility.</p>
+                        <p>Many academic portals, banking institutions, and government job boards impose rigid digital constraints on document submissions, often requiring passport photos or scanned signatures to be under a strict limit, such as 50KB or 100KB. Attempting to achieve these thresholds manually through repeated resizing and compression guesses is an incredibly frustrating process. To solve this, PixelResize features a specialized target size engine. By selecting one of our target buttons, the algorithm dynamically runs iterative binary-search compression loops on your local device, adjusting the quality threshold until the output file fits under your selected limit when the format can reach that size without sacrificing visual legibility.</p>
 
-                        <h3>Streamlining Workflows with Local Batch Processing</h3>
-                        <p>For professional creators, managing assets one by one is an expensive bottleneck. When you have a folder containing sixty product shots, you need a workflow that handles them in bulk. PixelResize supports multi-file uploads, queuing your assets for concurrent local processing. Since all calculations are done directly within your system's browser thread, you do not have to wait for server queues or transfer speeds. You can apply your custom dimensions, compression rates, or format outputs across your entire batch, saving hours of manual labor while maintaining absolute consistency across your web assets.</p>
+                        <h3>Local Image Processing</h3>
+                        <p>PixelResize processes your selected image directly in your browser. Your image stays on your device while you resize, compress, crop, or convert it.</p>
                     </div>
                 </div>
             </div>
@@ -599,7 +599,7 @@
                     <div class="security-item p-6">
                         <div class="text-4xl mb-4">💎</div>
                         <h3 class="font-bold mb-2">High Fidelity</h3>
-                        <p class="text-xs text-muted">We use the Squoosh-inspired processing engine to ensure the highest visual quality at the smallest file size.</p>
+                        <p class="text-xs text-muted">We use browser-native image processing APIs to balance visual quality and file size.</p>
                     </div>
                 </div>
             </div>
@@ -622,11 +622,11 @@
                     </div>
                     <div class="faq-item">
                         <div class="faq-question">Is PixelResize free?</div>
-                        <div class="faq-answer">Yes, all our tools are 100% free with no hidden subscriptions or limits on file quantity.</div>
+                        <div class="faq-answer">Yes, PixelResize tools are free to use. The current editor processes one selected image at a time.</div>
                     </div>
                     <div class="faq-item">
                         <div class="faq-question">Can I resize multiple images?</div>
-                        <div class="faq-answer">Absolutely. Our Bulk Image Resizer supports selecting dozens of files at once for batch processing.</div>
+                        <div class="faq-answer">Absolutely. The current editor processes one selected image at a time.</div>
                     </div>
                     <div class="faq-item">
                         <div class="faq-question">Does PixelResize upload images?</div>
