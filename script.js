@@ -10,7 +10,7 @@ const SEO_DATA = {
             <ul>
                 <li><strong>Browser-Based Processing:</strong> Powered by JavaScript, ensuring total privacy.</li>
                 <li><strong>Smart Compression:</strong> Reduce file size by up to 90% with minimal quality loss.</li>
-                <li><strong>Batch Processing:</strong> Upload multiple files and process them all in one go.</li>
+                <li><strong>Local Processing:</strong> Process your selected image directly in your browser without uploading it.</li>
                 <li><strong>Universal Support:</strong> Handles JPG, PNG, WebP, and even HEIC conversion.</li>
             </ul>
         `,
@@ -27,7 +27,7 @@ const SEO_DATA = {
         body: `<p>Our <strong>image compressor online</strong> strips unnecessary metadata and optimizes pixel data to reduce weight. This improves your Core Web Vitals and user experience by reducing Largest Contentful Paint (LCP) and Cumulative Layout Shift (CLS) issues caused by heavy assets. You can also use our <a href="/tools/image-resizer" onclick="event.preventDefault(); setTool('image-resizer')">online image resizer</a> to further optimize your images.</p>`,
         faq: [
             { q: 'How much can I reduce file size?', a: 'Typically, users see a file size reduction of 60-90% for JPG and WebP images without noticing any visual changes in quality.' },
-            { q: 'Can I compress multiple images?', a: 'Yes, our bulk compression engine supports processing dozens of images at once directly in your browser tab.' }
+            { q: 'Can I compress multiple images?', a: 'The current editor processes one selected image at a time. Your image stays in the browser and is not uploaded to a server.' }
         ]
     },
     'image-resizer': {
@@ -85,16 +85,16 @@ const SEO_DATA = {
     },
     'compress-image-to-10kb': {
         title: 'Compress Image to 10KB | Resize Image for Legacy Portals | PixelResize',
-        description: 'Need an image under 10KB? Our tool automatically compresses your image to under 10KB with iterative quality control.',
+        description: 'Need an image under 10KB? Our tool attempts to reduce your image to the selected target size with iterative quality control.',
         h2: 'How to Get an Image Under 10KB',
-        body: `<p>Some legacy portals require images under 10KB. We use extreme optimization to reach this target while maintaining as much clarity as possible. Also see <a href="/compress-image-to-50kb" onclick="event.preventDefault(); setTool('compress-image-to-50kb')">50KB</a> and <a href="/compress-image-to-100kb" onclick="event.preventDefault(); setTool('compress-image-to-100kb')">100KB</a> options.</p>`,
+        body: `<p>Some legacy portals require images under 10KB. We use iterative optimization to approach this target while maintaining as much clarity as possible. Also see <a href="/compress-image-to-50kb" onclick="event.preventDefault(); setTool('compress-image-to-50kb')">50KB</a> and <a href="/compress-image-to-100kb" onclick="event.preventDefault(); setTool('compress-image-to-100kb')">100KB</a> options.</p>`,
         faq: [{ q: 'Will it look blurry?', a: 'At 10KB, some artifacts are expected, but we prioritize visibility and meeting the strict file sized limit.' }]
     },
     'compress-image-to-50kb': {
         title: 'Compress Image to 50KB | Target Size Compressor | PixelResize',
-        description: 'Need an image under 50KB? Our tool automatically compresses your image to exactly 50KB for job portals and applications.',
+        description: 'Need an image under 50KB? Our tool attempts to reduce your image to the selected target size for job portals and applications.',
         h2: 'How to Get an Image Under 50KB for Official Forms',
-        body: `<p>Many job portals require 50KB limits. Our tool makes it easy to hit that target exactly with iterative quality adjustments. Try our <a href="/tools/image-resizer" onclick="event.preventDefault(); setTool('image-resizer')">resizer</a> if you need to change dimensions first.</p>`,
+        body: `<p>Many job portals require 50KB limits. Our tool attempts to stay within that limit using iterative quality adjustments. Try our <a href="/tools/image-resizer" onclick="event.preventDefault(); setTool('image-resizer')">resizer</a> if you need to change dimensions first.</p>`,
         faq: [
             { q: 'What if quality is too low?', a: 'We always try to maintain the highest quality possible within the 50KB limit.' }
         ]
@@ -110,9 +110,9 @@ const SEO_DATA = {
     },
     'compress-image-to-200kb': {
         title: 'Compress Image to 200KB | Target Size Compressor | PixelResize',
-        description: 'Need an image under 200KB? Our tool automatically compresses your image to exactly 200KB for high-quality web use.',
+        description: 'Need an image under 200KB? Our tool attempts to reduce your image to the selected target size for high-quality web use.',
         h2: 'Target 200KB Image Compression',
-        body: `<p>Perfect for hero images on blogs and websites. Pair this with our <a href="/crop-image" onclick="event.preventDefault(); setTool('crop-image')">cropping tool</a> for the best layout.</p>`,
+        body: `<p>Useful for hero images on blogs and websites. Pair this with our <a href="/crop-image" onclick="event.preventDefault(); setTool('crop-image')">cropping tool</a> for the best layout.</p>`,
         faq: [
             { q: 'Why target 200KB?', a: '200KB strikes the perfect balance between high visual fidelity and fast website load times.' }
         ]
@@ -201,6 +201,16 @@ const SEO_DATA = {
 let originalHomeH2 = '';
 let originalHomeBody = '';
 
+function getToolUrl(tool) {
+    if (!tool || tool === 'home') return '/';
+    const dedicatedTools = ['discord-pfp-resizer', 'resize-passport-photo', 'heic-to-jpg', 'crop-image', 'instagram-resizer', 'facebook-resizer'];
+    const seoTools = ['image-resizer', 'image-compressor', 'jpg-to-png', 'png-to-jpg', 'jpg-to-webp', 'to-avif', 'to-gif', 'bmp-to-png', 'gif-to-jpg', 'transform'];
+    if (dedicatedTools.includes(tool)) return `/${tool}/`;
+    if (tool.startsWith('compress-image-to-')) return `/${tool}/`;
+    if (seoTools.includes(tool)) return `/tools/${tool}/`;
+    return '/';
+}
+
 function updateSEO(tool, displayName = 'Editor') {
     const data = SEO_DATA[tool] || SEO_DATA['home'];
     
@@ -277,16 +287,7 @@ function updateSEO(tool, displayName = 'Editor') {
     const canonical = document.getElementById('canonical-url');
     if (canonical) {
         const baseUrl = 'https://pixelresize.site';
-        let url = baseUrl;
-        if (tool !== 'home') {
-            if (tool.includes('compress-image-to-')) {
-                url = `${baseUrl}/${tool}`;
-            } else if (['image-resizer', 'image-compressor', 'jpg-to-png', 'png-to-jpg', 'jpg-to-webp', 'to-avif', 'to-gif', 'discord-pfp-resizer', 'resize-passport-photo', 'heic-to-jpg', 'gif-to-webp'].includes(tool)) {
-                url = `${baseUrl}/tools/${tool}`;
-            } else {
-                url = `${baseUrl}/#${tool}`;
-            }
-        }
+        const url = `${baseUrl}${getToolUrl(tool)}`;
         canonical.setAttribute('href', url);
     }
 
@@ -300,9 +301,10 @@ function updateSEO(tool, displayName = 'Editor') {
     const relatedList = document.getElementById('related-tools-list');
     if (relatedList) {
         const allTools = Object.keys(SEO_DATA).filter(k => k !== 'home' && k !== tool);
-        const randomTools = allTools.sort(() => 0.5 - Math.random()).slice(0, 7);
-        relatedList.innerHTML = randomTools.map(t => `
-            <a href="/tools/${t}" class="btn-chip" onclick="event.preventDefault(); setTool('${t}')">
+        const startIndex = Math.max(0, allTools.indexOf(tool));
+        const orderedTools = [...allTools.slice(startIndex), ...allTools.slice(0, startIndex)].slice(0, 7);
+        relatedList.innerHTML = orderedTools.map(t => `
+            <a href="${getToolUrl(t)}" class="btn-chip" onclick="event.preventDefault(); setTool('${t}')">
                 ${t.replace(/-/g, ' ')}
             </a>
         `).join('');
@@ -731,6 +733,11 @@ async function handleFiles(files) {
 
     markUnsaved();
 
+    if (processedDataUrl && processedDataUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(processedDataUrl);
+    }
+    processedDataUrl = null;
+    processedBlob = null;
     originalFile = file;
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -978,11 +985,25 @@ async function applyChanges() {
 
             if (!blob) throw new Error('Image compression failed.');
 
-            while (blob.size > targetBytes && currentQuality > 0.05) {
-                currentQuality = Math.max(0.05, currentQuality - 0.05);
-                const nextBlob = await new Promise(resolve => canvas.toBlob(resolve, format, currentQuality));
-                if (!nextBlob) break;
-                blob = nextBlob;
+            if (blob.size > targetBytes) {
+                let low = 0.01;
+                let high = currentQuality;
+                let bestBlob = null;
+
+                for (let i = 0; i < 8; i++) {
+                    const mid = (low + high) / 2;
+                    const nextBlob = await new Promise(resolve => canvas.toBlob(resolve, format, mid));
+                    if (!nextBlob) break;
+
+                    if (nextBlob.size <= targetBytes) {
+                        bestBlob = nextBlob;
+                        low = mid;
+                    } else {
+                        high = mid;
+                    }
+                }
+
+                blob = bestBlob || await new Promise(resolve => canvas.toBlob(resolve, format, low));
             }
 
             processedBlob = blob;
@@ -1031,7 +1052,8 @@ function handleDownload() {
     if (!processedBlob) return;
     
     const link = document.createElement('a');
-    const ext = infoFmt.textContent.toLowerCase();
+    const mime = processedBlob.type || 'image/png';
+    const ext = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/avif': 'avif', 'image/gif': 'gif' })[mime] || 'png';
     link.download = `pixelresize-${Date.now()}.${ext}`;
     
     // Use the already generated blob URL
@@ -1101,6 +1123,10 @@ function setupNavigationProtection() {
 
 function resetApp() {
     markSaved();
+    if (processedDataUrl && processedDataUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(processedDataUrl);
+    }
+    processedDataUrl = null;
     originalFile = null;
     currentImage = null;
     processedBlob = null;
@@ -1308,27 +1334,8 @@ function setTool(tool, forceOpen = false) {
     updateSEO(tool, displayName); 
 
     // Update URL without reload
-    let cleanUrl = '/';
-    // Optimization: detect if we should use tool or targetTab for URL
-    let urlSlug = tool;
-    if (['home'].includes(targetTab)) urlSlug = 'home';
-
-    if (urlSlug !== 'home') {
-        const dedicatedTools = ['discord-pfp-resizer', 'resize-passport-photo', 'heic-to-jpg', 'crop-image', 'instagram-resizer', 'facebook-resizer'];
-        const seoTools = ['image-resizer', 'image-compressor', 'jpg-to-png', 'png-to-jpg', 'jpg-to-webp', 'to-avif', 'to-gif', 'bmp-to-png', 'gif-to-jpg', 'transform', 'compress-image-to-10kb', 'compress-image-to-50kb', 'compress-image-to-100kb', 'compress-image-to-200kb'];
-        
-        if (dedicatedTools.includes(urlSlug)) {
-            cleanUrl = `/${urlSlug}/`;
-        } else if (seoTools.includes(urlSlug)) {
-            if (urlSlug.startsWith('compress-image-to-')) {
-                cleanUrl = `/${urlSlug}`;
-            } else {
-                cleanUrl = `/tools/${urlSlug}/`;
-            }
-        } else {
-            cleanUrl = `/#${targetTab}`;
-        }
-    }
+    const urlSlug = ['home'].includes(targetTab) ? 'home' : tool;
+    const cleanUrl = getToolUrl(urlSlug);
     
     if (window.location.pathname + window.location.hash !== cleanUrl) {
         history.pushState({ tool: urlSlug }, '', cleanUrl);
