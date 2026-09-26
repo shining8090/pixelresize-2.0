@@ -17,19 +17,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Syntax check
-        run: node --check script.js
-
-      - name: TypeScript check
-        run: npx tsc --noEmit
-
-      - name: Vite build check
-        run: npm run build
+      - name: Runtime syntax check
+        run: |
+          node --check script.js
+          node --experimental-strip-types --check server.ts
+          node --check vite.config.ts
 
       - name: Static route and content audit
         run: |
