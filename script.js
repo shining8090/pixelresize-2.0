@@ -484,6 +484,27 @@ function handleInitialRoute() {
 // Handle browser back/forward
 window.addEventListener('popstate', handleInitialRoute);
 
+function setCompressionFormat() {
+    if (!currentImage || !originalFile) return;
+
+    const type = (originalFile.type || '').toLowerCase();
+    let format = 'image/webp';
+
+    if (type === 'image/jpeg' || type === 'image/jpg') {
+        format = 'image/jpeg';
+    } else if (type === 'image/webp') {
+        format = 'image/webp';
+    }
+
+    const formatBtn = document.querySelector(`#tab-convert .btn-chip[data-format="${format}"]`);
+    if (formatBtn) {
+        document.querySelectorAll('#tab-convert .btn-chip').forEach(btn => btn.classList.remove('active'));
+        formatBtn.classList.add('active');
+    }
+
+    updateInfo();
+}
+
 function setupEventListeners() {
     // File Upload
     uploadZone.addEventListener('click', () => fileInput.click());
@@ -514,6 +535,13 @@ function setupEventListeners() {
                 cropState.isActive = false;
                 mainPreview.classList.remove('hidden');
                 cropContainer.classList.add('hidden');
+            }
+
+            // Compression must use a format that supports the quality parameter.
+            // PNG ignores the quality argument to canvas.toBlob(), which can make
+            // a "compressed" PNG larger than the original file.
+            if (tab === 'compress') {
+                setCompressionFormat();
             }
 
             updateSEO(tab);
@@ -892,11 +920,10 @@ async function applyChanges() {
     const canvas = editorCanvas;
     const ctx = canvas.getContext('2d');
 
-    // Get real pixel coordinates
     const rect = cropPreviewImg.getBoundingClientRect();
-    
+
     let sx, sy, sw, sh;
-    
+
     if (!rect.width || !rect.height || currentCrop.w === 0) {
         sx = 0;
         sy = 0;
@@ -926,58 +953,74 @@ async function applyChanges() {
     ctx.drawImage(currentImage, sx, sy, sw, sh, -finalW / 2, -finalH / 2, finalW, finalH);
     ctx.restore();
 
-    const format = document.querySelector('#tab-convert .btn-chip.active')?.dataset.format || 'image/png';
-    
+    let format = document.querySelector('#tab-convert .btn-chip.active')?.dataset.format || 'image/png';
+    const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+    const originalSize = originalFile?.size || 0;
+
+    if (activeTab === 'compress' && format === 'image/png') {
+        format = 'image/webp';
+        const webpBtn = document.querySelector('#tab-convert .btn-chip[data-format="image/webp"]');
+        if (webpBtn) {
+            document.querySelectorAll('#tab-convert .btn-chip').forEach(btn => btn.classList.remove('active'));
+            webpBtn.classList.add('active');
+        }
+    }
+
+    const supportsQuality = ['image/jpeg', 'image/webp', 'image/avif'].includes(format);
+    const quality = Math.max(0.01, Math.min(1, parseInt(compressSlider.value) / 100 || 0.85));
+
     if (selectedTargetKB) {
         const targetBytes = selectedTargetKB * 1024;
-        const supportsQuality = ['image/jpeg', 'image/webp', 'image/avif'].includes(format);
-        
+
         if (supportsQuality) {
-            let quality = parseInt(compressSlider.value) / 100;
-            if (quality > 0.92) quality = 0.92;
-            
-            let blob = await new Promise(resolve => canvas.toBlob(resolve, format, quality));
-            
-            // Iterative reduction if too big
-            if (blob.size > targetBytes) {
-                while (blob.size > targetBytes && quality > 0.05) {
-                    quality -= 0.05;
-                    blob = await new Promise(resolve => canvas.toBlob(resolve, format, quality));
-                }
-            } else if (blob.size < targetBytes * 0.7) {
-                // If it's much smaller, we can try to improve quality
-                while (blob.size < targetBytes && quality < 0.95) {
-                    quality += 0.05;
-                    const nextBlob = await new Promise(resolve => canvas.toBlob(resolve, format, quality));
-                    if (nextBlob.size > targetBytes) break;
-                    blob = nextBlob;
-                }
+            let currentQuality = Math.min(0.95, quality);
+            let blob = await new Promise(resolve => canvas.toBlob(resolve, format, currentQuality));
+
+            if (!blob) throw new Error('Image compression failed.');
+
+            while (blob.size > targetBytes && currentQuality > 0.05) {
+                currentQuality = Math.max(0.05, currentQuality - 0.05);
+                const nextBlob = await new Promise(resolve => canvas.toBlob(resolve, format, currentQuality));
+                if (!nextBlob) break;
+                blob = nextBlob;
             }
-            
+
             processedBlob = blob;
         } else {
-            // PNG/GIF format - no iterative quality control possible via toBlob natively
             processedBlob = await new Promise(resolve => canvas.toBlob(resolve, format));
         }
+    } else if (activeTab === 'compress' && supportsQuality) {
+        let currentQuality = Math.min(0.95, quality);
+        let blob = await new Promise(resolve => canvas.toBlob(resolve, format, currentQuality));
+
+        if (!blob) throw new Error('Image compression failed.');
+
+        while (originalSize > 0 && blob.size >= originalSize && currentQuality > 0.05) {
+            currentQuality = Math.max(0.05, currentQuality - 0.05);
+            const nextBlob = await new Promise(resolve => canvas.toBlob(resolve, format, currentQuality));
+            if (!nextBlob) break;
+            blob = nextBlob;
+        }
+
+        processedBlob = (originalSize > 0 && blob.size >= originalSize)
+            ? originalFile
+            : blob;
     } else {
-        const quality = parseInt(compressSlider.value) / 100;
         processedBlob = await new Promise(resolve => canvas.toBlob(resolve, format, quality));
+        if (!processedBlob) throw new Error('Image processing failed.');
     }
-    
-    // Revoke old URL to manage memory
+
     if (processedDataUrl && processedDataUrl.startsWith('blob:')) {
         URL.revokeObjectURL(processedDataUrl);
     }
-    
+
     processedDataUrl = URL.createObjectURL(processedBlob);
     mainPreview.src = processedDataUrl;
-    
-    // Update real stats
+
     updateInfo();
 
     markUnsaved();
 
-    // Switch back to preview tab
     document.querySelector('.tab-btn[data-tab="resize"]').click();
 
     applyBtn.textContent = 'Applied!';
