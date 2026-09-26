@@ -1,0 +1,94 @@
+name: Static Site Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax check
+        run: node --check script.js
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Vite build check
+        run: npm run build
+
+      - name: Static route and content audit
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import xml.etree.ElementTree as ET
+
+          root = Path('.')
+          required = [
+              'index.html',
+              'tools/image-resizer/index.html',
+              'tools/image-compressor/index.html',
+              'tools/jpg-to-png/index.html',
+              'tools/png-to-jpg/index.html',
+              'tools/jpg-to-webp/index.html',
+              'tools/to-avif/index.html',
+              'tools/to-gif/index.html',
+              'tools/bmp-to-png/index.html',
+              'tools/gif-to-jpg/index.html',
+              'tools/transform/index.html',
+              'compress-image-to-10kb/index.html',
+              'compress-image-to-50kb/index.html',
+              'compress-image-to-100kb/index.html',
+              'compress-image-to-200kb/index.html',
+              'discord-pfp-resizer/index.html',
+              'resize-passport-photo/index.html',
+              'heic-to-jpg/index.html',
+              'crop-image/index.html',
+              'instagram-resizer/index.html',
+              'facebook-resizer/index.html',
+          ]
+          missing = [p for p in required if not (root / p).is_file()]
+          if missing:
+              raise SystemExit('Missing static routes: ' + ', '.join(missing))
+
+          html_files = [root / p for p in required]
+          bad = []
+          for path in html_files:
+              text = path.read_text(encoding='utf-8')
+              if 'AggregateRating' in text or 'Math.random' in text:
+                  bad.append(str(path))
+              if 'Squoosh-inspired processing engine' in text:
+                  bad.append(str(path))
+          if bad:
+              raise SystemExit('Unsupported/stale content found: ' + ', '.join(sorted(set(bad))))
+
+          tree = ET.parse(root / 'sitemap.xml')
+          ns = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+          for loc in tree.findall('.//sm:loc', ns):
+              url = loc.text or ''
+              path = re.sub(r'^https://pixelresize\.site', '', url)
+              if path in ('/', ''):
+                  target = root / 'index.html'
+              elif path.endswith('/'):
+                  target = root / path.lstrip('/') / 'index.html'
+              else:
+                  target = root / path.lstrip('/')
+              if not target.is_file():
+                  raise SystemExit(f'Sitemap URL has no static target: {url}')
+          print('Static route/content/sitemap audit passed.')
+          PY
