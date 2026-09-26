@@ -46,7 +46,7 @@ const SEO_MAP: Record<string, SeoData> = {
         `,
         faqs: [
             { q: 'How much can I reduce file size?', a: 'Typically, users see a file size reduction of 60-90% for JPG and WebP images without noticing any visual changes in quality.' },
-            { q: 'Can I compress multiple images?', a: 'Yes, our bulk compression engine supports processing dozens of images at once directly in your browser tab.' }
+            { q: 'Can I compress multiple images?', a: 'The current editor processes one selected image at a time. Your image stays in the browser and is not uploaded to a server.' }
         ]
     },
     'image-resizer': {
@@ -102,10 +102,10 @@ const SEO_MAP: Record<string, SeoData> = {
             { q: 'Are WebP images supported by all browsers?', a: 'Yes, as of 2026, all major browsers including Chrome, Safari, Firefox, and Edge fully support WebP images.' }
         ]
     },
-    'compress-image-to-10kb': { title: 'Compress Image to 10KB Online', description: 'Need an image under 10KB? Our tool automatically compresses your image to under 10KB with iterative quality control.', h1: 'Compress Image to 10KB', h2: 'Target 10KB Image Compression', body: 'Reach tiny file sizes like 10KB for specific document uploads. Also see <a href="/compress-image-to-50kb">50KB</a> and <a href="/compress-image-to-100kb">100KB</a> options.' },
-    'compress-image-to-50kb': { title: 'Compress Image to 50KB Online', description: 'Need an image under 50KB? Our tool automatically compresses your image to exactly 50KB for job portals and applications.', h1: 'Compress Image to 50KB', h2: 'Target 50KB Image Compression', body: 'Most government portals require a 50KB limit. Try our <a href="/tools/image-resizer">resizer</a> if you need to change dimensions first.' },
+    'compress-image-to-10kb': { title: 'Compress Image to 10KB Online', description: 'Need an image under 10KB? Our tool attempts to reduce your image to the selected target size with iterative quality control.', h1: 'Compress Image to 10KB', h2: 'Target 10KB Image Compression', body: 'Reach tiny file sizes like 10KB for specific document uploads. Also see <a href="/compress-image-to-50kb">50KB</a> and <a href="/compress-image-to-100kb">100KB</a> options.' },
+    'compress-image-to-50kb': { title: 'Compress Image to 50KB Online', description: 'Need an image under 50KB? Our tool attempts to reduce your image to the selected target size for job portals and applications.', h1: 'Compress Image to 50KB', h2: 'Target 50KB Image Compression', body: 'Most government portals require a 50KB limit. Try our <a href="/tools/image-resizer">resizer</a> if you need to change dimensions first.' },
     'compress-image-to-100kb': { title: 'Compress Image to 100KB Online', description: 'Automatically resize and compress images to under 100KB. Perfect for online forms and government application websites.', h1: 'Compress Image to 100KB', h2: 'Target 100KB Image Compression', body: 'The standard limit for many online applications. If 100KB is still too big, try our <a href="/compress-image-to-50kb">50KB compressor</a>.' },
-    'compress-image-to-200kb': { title: 'Compress Image to 200KB Online', description: 'Need an image under 200KB? Our tool automatically compresses your image to exactly 200KB for high-quality web use.', h1: 'Compress Image to 200KB', h2: 'Target 200KB Image Compression', body: 'Perfect for hero images on blogs. Pair this with our <a href="/crop-image">cropping tool</a> for the best layout.' },
+    'compress-image-to-200kb': { title: 'Compress Image to 200KB Online', description: 'Need an image under 200KB? Our tool attempts to reduce your image to the selected target size for high-quality web use.', h1: 'Compress Image to 200KB', h2: 'Target 200KB Image Compression', body: 'Perfect for hero images on blogs. Pair this with our <a href="/crop-image">cropping tool</a> for the best layout.' },
     'discord-pfp-resizer': { title: 'Discord PFP Resizer | Get Perfect Avatar Size', description: 'Perfectly resize your avatar for Discord (128x128). Auto-crop to square and optimize for profile display.', h1: 'Discord Profile Picture Resizer', h2: 'Discord Avatar Optimization', body: 'Get the perfect 128x128 square for your Discord profile. We recommend also using <a href="/tools/image-compressor">compression</a> if your avatar is a complex photograph.' },
     'resize-passport-photo': { title: 'Resize Passport Photo Online | 2x2 and 35x45mm', description: 'Resize your photo to official passport requirements. Supports US (2x2in), UK, and EU passport sizes.', h1: 'Passport Photo Resizer', h2: 'Official Passport Sizes Online', body: 'Meet strict government specs for passport photos. Also try our <a href="/crop-image">crop tool</a> to center your face perfectly.' },
     'heic-to-jpg': { title: 'HEIC to JPG Converter Online | iPhone Photo Converter', description: 'Convert iPhone HEIC photos to JPG instantly in your browser. Fast, free, and completely secure.', h1: 'HEIC to JPG Converter', h2: 'iPhone Image Compatibility', body: 'Unlock your iPhone photos for use anywhere. Once converted, you can <a href="/tools/image-resizer">resize</a> or <a href="/tools/image-compressor">compress</a> them easily.' },
@@ -121,9 +121,11 @@ const SEO_MAP: Record<string, SeoData> = {
 
 function generateRelatedToolsHTML(currentSlug: string) {
     const allTools = Object.keys(SEO_MAP).filter(k => k !== 'home' && k !== currentSlug);
-    const randomTools = allTools.sort(() => 0.5 - Math.random()).slice(0, 8);
-    return randomTools.map(t => {
-        const url = t.includes('compress-image-to-') ? `/${t}` : `/tools/${t}`;
+    const startIndex = Math.max(0, allTools.indexOf(currentSlug));
+    const orderedTools = [...allTools.slice(startIndex), ...allTools.slice(0, startIndex)].slice(0, 8);
+    return orderedTools.map(t => {
+        const dedicatedTools = ['discord-pfp-resizer', 'resize-passport-photo', 'heic-to-jpg', 'crop-image', 'instagram-resizer', 'facebook-resizer'];
+        const url = dedicatedTools.includes(t) ? `/${t}/` : t.includes('compress-image-to-') ? `/${t}/` : `/tools/${t}/`;
         return `<a href="${url}" class="btn-chip" onclick="event.preventDefault(); setTool('${t}', true)">${t.replace(/-/g, ' ')}</a>`;
     }).join('');
 }
@@ -194,7 +196,8 @@ const serveIndex = (req: express.Request, res: express.Response) => {
         const seo = SEO_MAP[slug] || SEO_MAP['home'];
 
         let processedHtml = html;
-        const fullUrl = `https://pixelresize.site${req.path}`;
+        const canonicalPath = req.path.endsWith('/') || req.path === '/' ? req.path : `${req.path}/`;
+        const fullUrl = `https://pixelresize.site${canonicalPath}`;
         
         // 1. Primary Metadata
         processedHtml = processedHtml.replace(/<title>.*?<\/title>/, `<title>${seo.title}</title>`);
@@ -298,11 +301,6 @@ const serveIndex = (req: express.Request, res: express.Response) => {
             "name": `PixelResize - ${displayName}`,
             "operatingSystem": "All",
             "applicationCategory": "MultimediaApplication",
-            "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": "4.9",
-                "reviewCount": "1250"
-            },
             "offers": {
                 "@type": "Offer",
                 "price": "0",
