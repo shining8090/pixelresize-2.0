@@ -1056,7 +1056,7 @@ async function encodeTargetSize(canvas, format, targetBytes, startQuality = 0.95
     };
 }
 
-function applyChanges() {
+async function applyChanges() {
     if (!currentImage) return;
 
     applyBtn.textContent = 'Processing...';
