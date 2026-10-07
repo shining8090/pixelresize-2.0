@@ -546,7 +546,9 @@ function setupEventListeners() {
                 setCompressionFormat();
             }
 
-            updateSEO(tab);
+            // Tab changes are editor UI state only. Do not rewrite the page's
+            // SEO title, canonical, or indexed content when a user switches tools.
+            // The active URL/tool page remains the SEO source of truth.
         });
     });
 
