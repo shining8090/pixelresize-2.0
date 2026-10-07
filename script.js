@@ -2,14 +2,14 @@
 const SEO_DATA = {
     'home': {
         title: 'PixelResize | Free Online Image Resizer & Compressor | 100% Private',
-        description: 'Free online image resizer and compressor. Resize image online free without quality loss. 100% private browser-based tool.',
+        description: 'Free online image resizer and compressor. Resize, compress, and convert images in your browser with no server upload.',
         h2: 'How to Resize and Compress Images Effortlessly',
         body: `
             <p>PixelResize provides a suite of tools to help you <strong>resize image online free</strong> and <strong>compress image online free</strong> without compromising on detail. Our platform is built for speed and privacy, utilizing advanced browser APIs to ensure your data stays on your device.</p>
             <h3>Core Features of PixelResize</h3>
             <ul>
                 <li><strong>Browser-Based Processing:</strong> Powered by JavaScript, ensuring total privacy.</li>
-                <li><strong>Smart Compression:</strong> Reduce file size by up to 90% with minimal quality loss.</li>
+                <li><strong>Smart Compression:</strong> Reduce file size by adjusting encoding quality and, when needed, image dimensions.</li>
                 <li><strong>Local Processing:</strong> Process your selected image directly in your browser without uploading it.</li>
                 <li><strong>Universal Support:</strong> Handles JPG, PNG, WebP, and even HEIC conversion.</li>
             </ul>
@@ -26,7 +26,7 @@ const SEO_DATA = {
         h2: 'Expert Image Compression for Faster Websites',
         body: `<p>Our <strong>image compressor online</strong> strips unnecessary metadata and optimizes pixel data to reduce weight. This improves your Core Web Vitals and user experience by reducing Largest Contentful Paint (LCP) and Cumulative Layout Shift (CLS) issues caused by heavy assets. You can also use our <a href="/tools/image-resizer" onclick="event.preventDefault(); setTool('image-resizer')">online image resizer</a> to further optimize your images.</p>`,
         faq: [
-            { q: 'How much can I reduce file size?', a: 'Typically, users see a file size reduction of 60-90% for JPG and WebP images without noticing any visual changes in quality.' },
+            { q: 'How much can I reduce file size?', a: 'Results vary by image content, format, dimensions, and quality settings; larger reductions generally require stronger compression or resizing.' },
             { q: 'Can I compress multiple images?', a: 'The current editor processes one selected image at a time. Your image stays in the browser and is not uploaded to a server.' }
         ]
     },
