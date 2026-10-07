@@ -1089,8 +1089,16 @@ async function applyChanges() {
         sh = Math.max(1, Math.min(currentImage.height - sy, currentCrop.h * scaleY));
     }
 
-    const finalW = parseInt(resizeW.value) || sw;
-    const finalH = parseInt(resizeH.value) || sh;
+    // When a crop has been selected, preserve the crop's native pixel
+    // dimensions unless the user explicitly changed the resize dimensions.
+    // Previously the original resize fields (for example 2880x1650) were
+    // reused after a 1:1 crop, stretching the cropped square back to 16:9.
+    const inputW = parseInt(resizeW.value) || 0;
+    const inputH = parseInt(resizeH.value) || 0;
+    const cropWasSelected = currentCrop.w > 0 && currentCrop.h > 0;
+    const resizeStillMatchesOriginal = inputW === currentImage.width && inputH === currentImage.height;
+    const finalW = cropWasSelected && resizeStillMatchesOriginal ? Math.max(1, Math.round(sw)) : (inputW || Math.max(1, Math.round(sw)));
+    const finalH = cropWasSelected && resizeStillMatchesOriginal ? Math.max(1, Math.round(sh)) : (inputH || Math.max(1, Math.round(sh)));
 
     const isHorizontal = rotation % 180 === 0;
     canvas.width = isHorizontal ? finalW : finalH;
