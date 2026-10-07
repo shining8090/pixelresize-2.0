@@ -394,6 +394,11 @@ let isDragging = false;
 let currentHandle = null;
 let startX, startY;
 let currentCrop = { x: 0, y: 0, w: 0, h: 0 };
+// Preserve the rendered crop image dimensions while the crop tab is visible.
+// The crop preview is hidden when Apply Changes runs, so clientWidth/clientHeight
+// become zero and the native image dimensions must not be substituted for them.
+let cropDisplayWidth = 0;
+let cropDisplayHeight = 0;
 
 // State Initialization based on default HTML state
 selectedTargetKB = null; 
@@ -746,6 +751,9 @@ async function handleFiles(files) {
         const img = new Image();
         img.onload = () => {
             currentImage = img;
+            currentCrop = { x: 0, y: 0, w: 0, h: 0 };
+            cropDisplayWidth = 0;
+            cropDisplayHeight = 0;
             mainPreview.src = e.target.result;
             cropPreviewImg.src = e.target.result;
             processedDataUrl = e.target.result;
@@ -809,6 +817,11 @@ function initCrop() {
     const iw = rect.width;
     const ih = rect.height;
 
+    // Capture the actual rendered layout size while the crop tab is visible.
+    // This remains valid after the crop preview is hidden during Apply Changes.
+    cropDisplayWidth = iw;
+    cropDisplayHeight = ih;
+
     let cw, ch;
     if (cropState.aspectRatio === 'free') {
         cw = iw * 0.8;
@@ -847,8 +860,8 @@ function updateCropUI() {
     // Map to real pixels for the stats
     // BoundingClientRect includes CSS rotation/zoom. Use layout dimensions
     // so crop statistics remain tied to the actual source pixel coordinates.
-    const displayWidth = cropPreviewImg.clientWidth || cropPreviewImg.width;
-    const displayHeight = cropPreviewImg.clientHeight || cropPreviewImg.height;
+    const displayWidth = cropDisplayWidth || cropPreviewImg.clientWidth || cropPreviewImg.width;
+    const displayHeight = cropDisplayHeight || cropPreviewImg.clientHeight || cropPreviewImg.height;
     const scaleX = currentImage.width / Math.max(displayWidth, 1);
     const scaleY = currentImage.height / Math.max(displayHeight, 1);
     
@@ -876,9 +889,8 @@ function moveCropAction(e) {
     startX = e.clientX;
     startY = e.clientY;
 
-    const rect = cropPreviewImg.getBoundingClientRect();
-    const maxWidth = rect.width;
-    const maxHeight = rect.height;
+    const maxWidth = cropDisplayWidth || cropPreviewImg.clientWidth || cropPreviewImg.width;
+    const maxHeight = cropDisplayHeight || cropPreviewImg.clientHeight || cropPreviewImg.height;
 
     if (currentHandle === 'move') {
         currentCrop.x = Math.max(0, Math.min(maxWidth - currentCrop.w, currentCrop.x + dx));
@@ -1069,8 +1081,8 @@ async function applyChanges() {
     // Use the image's layout dimensions, not getBoundingClientRect().
     // CSS zoom/rotation changes the visual bounding box but must not change
     // the mapping from the crop rectangle to source pixels.
-    const displayWidth = cropPreviewImg.clientWidth || cropPreviewImg.width;
-    const displayHeight = cropPreviewImg.clientHeight || cropPreviewImg.height;
+    const displayWidth = cropDisplayWidth || cropPreviewImg.clientWidth || cropPreviewImg.width;
+    const displayHeight = cropDisplayHeight || cropPreviewImg.clientHeight || cropPreviewImg.height;
 
     let sx, sy, sw, sh;
 
@@ -1498,5 +1510,3 @@ window.addEventListener('load', () => {
     window.scrollTo(0, 0);
     if (!currentImage) {
         processingUI.classList.add('hidden');
-    }
-});
