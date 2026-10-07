@@ -934,7 +934,7 @@ function endCropAction(e) {
     currentHandle = null;
 }
 
-async async function canvasToBlob(canvas, format, quality) {
+async function canvasToBlob(canvas, format, quality) {
     return new Promise(resolve => {
         const callback = blob => resolve(blob || null);
         if (typeof quality === 'number' && ['image/jpeg', 'image/webp', 'image/avif'].includes(format)) {
