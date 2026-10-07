@@ -770,15 +770,25 @@ function rotate(deg) {
 
 function updateInfo() {
     const formatChip = document.querySelector('#tab-convert .btn-chip.active');
-    infoFmt.textContent = formatChip ? formatChip.textContent : 'PNG';
-    
+    const activeFormat = processedBlob?.type || formatChip?.dataset.format || 'image/png';
+    const formatNames = {
+        'image/jpeg': 'JPG',
+        'image/png': 'PNG',
+        'image/webp': 'WEBP',
+        'image/avif': 'AVIF',
+        'image/gif': 'GIF',
+        'image/bmp': 'BMP'
+    };
+    infoFmt.textContent = formatNames[activeFormat] || (formatChip ? formatChip.textContent : 'PNG');
+
     if (processedBlob) {
         infoEst.textContent = formatBytes(processedBlob.size);
     } else if (selectedTargetKB) {
-        infoEst.textContent = `~${selectedTargetKB} KB (Apply to see exact)`;
+        // A target is a maximum file-size requirement, not a promise of an
+        // exact byte count. The final, measured Blob size is shown after Apply.
+        infoEst.textContent = `≤${selectedTargetKB} KB target`;
     } else {
         const q = parseInt(compressSlider.value) / 100;
-        // Simple heuristic for estimation
         const est = originalFile ? originalFile.size * q * 0.7 : 0;
         infoEst.textContent = formatBytes(est);
     }
@@ -833,9 +843,12 @@ function updateCropUI() {
     cropBox.style.height = currentCrop.h + 'px';
 
     // Map to real pixels for the stats
-    const rect = cropPreviewImg.getBoundingClientRect();
-    const scaleX = currentImage.width / rect.width;
-    const scaleY = currentImage.height / rect.height;
+    // BoundingClientRect includes CSS rotation/zoom. Use layout dimensions
+    // so crop statistics remain tied to the actual source pixel coordinates.
+    const displayWidth = cropPreviewImg.clientWidth || cropPreviewImg.width;
+    const displayHeight = cropPreviewImg.clientHeight || cropPreviewImg.height;
+    const scaleX = currentImage.width / Math.max(displayWidth, 1);
+    const scaleY = currentImage.height / Math.max(displayHeight, 1);
     
     const realW = Math.round(currentCrop.w * scaleX);
     const realH = Math.round(currentCrop.h * scaleY);
@@ -919,7 +932,129 @@ function endCropAction(e) {
     currentHandle = null;
 }
 
-async function applyChanges() {
+async async function canvasToBlob(canvas, format, quality) {
+    return new Promise(resolve => {
+        const callback = blob => resolve(blob || null);
+        if (typeof quality === 'number' && ['image/jpeg', 'image/webp', 'image/avif'].includes(format)) {
+            canvas.toBlob(callback, format, quality);
+        } else {
+            canvas.toBlob(callback, format);
+        }
+    });
+}
+
+async function encodeTargetSize(canvas, format, targetBytes, startQuality = 0.95) {
+    if (!targetBytes || targetBytes <= 0) {
+        return canvasToBlob(canvas, format, startQuality);
+    }
+
+    const supportsQuality = ['image/jpeg', 'image/webp', 'image/avif'].includes(format);
+    if (!supportsQuality) {
+        const fallback = await canvasToBlob(canvas, format);
+        return {
+            blob: fallback,
+            fitsTarget: !!fallback && fallback.size <= targetBytes,
+            width: canvas.width,
+            height: canvas.height
+        };
+    }
+
+    let workingCanvas = canvas;
+    let best = null;
+    let width = canvas.width;
+    let height = canvas.height;
+
+    // First try the current dimensions. Binary-search the highest quality
+    // that stays at or below the requested byte ceiling.
+    for (let dimensionPass = 0; dimensionPass < 10; dimensionPass++) {
+        let low = 0.01;
+        let high = Math.min(0.95, Math.max(0.01, startQuality));
+        let highBlob = await canvasToBlob(workingCanvas, format, high);
+        if (!highBlob) throw new Error('Image compression failed.');
+
+        if (highBlob.size <= targetBytes) {
+            best = highBlob;
+            for (let i = 0; i < 10; i++) {
+                const mid = (low + high) / 2;
+                const candidate = await canvasToBlob(workingCanvas, format, mid);
+                if (!candidate) break;
+                if (candidate.size <= targetBytes) {
+                    best = candidate;
+                    low = mid;
+                } else {
+                    high = mid;
+                }
+            }
+            return {
+                blob: best,
+                fitsTarget: best.size <= targetBytes,
+                width,
+                height
+            };
+        }
+
+        const minimumQualityBlob = await canvasToBlob(workingCanvas, format, 0.01);
+        if (!minimumQualityBlob) throw new Error('Image compression failed.');
+
+        if (minimumQualityBlob.size <= targetBytes) {
+            best = minimumQualityBlob;
+            let low = 0.01;
+            let high = Math.min(0.95, Math.max(0.01, startQuality));
+            for (let i = 0; i < 10; i++) {
+                const mid = (low + high) / 2;
+                const candidate = await canvasToBlob(workingCanvas, format, mid);
+                if (!candidate) break;
+                if (candidate.size <= targetBytes) {
+                    best = candidate;
+                    low = mid;
+                } else {
+                    high = mid;
+                }
+            }
+            return {
+                blob: best,
+                fitsTarget: best.size <= targetBytes,
+                width,
+                height
+            };
+        }
+
+        // Quality alone cannot reach the target. Reduce pixel dimensions and
+        // try again. This is the missing step that caused large files to be
+        // saved even when the UI showed a target KB value.
+        const ratio = Math.sqrt(targetBytes / Math.max(minimumQualityBlob.size, 1));
+        const scale = Math.max(0.45, Math.min(0.88, ratio * 0.92));
+        const nextWidth = Math.max(64, Math.floor(width * scale));
+        const nextHeight = Math.max(64, Math.floor(height * scale));
+
+        if (nextWidth >= width && nextHeight >= height) break;
+
+        const nextCanvas = document.createElement('canvas');
+        nextCanvas.width = nextWidth;
+        nextCanvas.height = nextHeight;
+        const nextCtx = nextCanvas.getContext('2d');
+        if (!nextCtx) throw new Error('Image processing failed.');
+        nextCtx.imageSmoothingEnabled = true;
+        try { nextCtx.imageSmoothingQuality = 'high'; } catch (_) {}
+        nextCtx.drawImage(workingCanvas, 0, 0, nextWidth, nextHeight);
+
+        workingCanvas = nextCanvas;
+        width = nextWidth;
+        height = nextHeight;
+    }
+
+    // If the target is exceptionally small, return the smallest candidate we
+    // could produce rather than silently returning the original image.
+    const finalBlob = best || await canvasToBlob(workingCanvas, format, 0.01);
+    return {
+        blob: finalBlob,
+        fitsTarget: !!finalBlob && finalBlob.size <= targetBytes,
+        width,
+        height
+    };
+}
+
+function applyChanges() {
     if (!currentImage) return;
 
     applyBtn.textContent = 'Processing...';
@@ -927,23 +1062,27 @@ async function applyChanges() {
     const canvas = editorCanvas;
     const ctx = canvas.getContext('2d');
 
-    const rect = cropPreviewImg.getBoundingClientRect();
+    // Use the image's layout dimensions, not getBoundingClientRect().
+    // CSS zoom/rotation changes the visual bounding box but must not change
+    // the mapping from the crop rectangle to source pixels.
+    const displayWidth = cropPreviewImg.clientWidth || cropPreviewImg.width;
+    const displayHeight = cropPreviewImg.clientHeight || cropPreviewImg.height;
 
     let sx, sy, sw, sh;
 
-    if (!rect.width || !rect.height || currentCrop.w === 0) {
+    if (!displayWidth || !displayHeight || currentCrop.w === 0) {
         sx = 0;
         sy = 0;
         sw = currentImage.width;
         sh = currentImage.height;
     } else {
-        const scaleX = currentImage.width / rect.width;
-        const scaleY = currentImage.height / rect.height;
+        const scaleX = currentImage.width / displayWidth;
+        const scaleY = currentImage.height / displayHeight;
 
-        sx = currentCrop.x * scaleX;
-        sy = currentCrop.y * scaleY;
-        sw = currentCrop.w * scaleX;
-        sh = currentCrop.h * scaleY;
+        sx = Math.max(0, Math.min(currentImage.width, currentCrop.x * scaleX));
+        sy = Math.max(0, Math.min(currentImage.height, currentCrop.y * scaleY));
+        sw = Math.max(1, Math.min(currentImage.width - sx, currentCrop.w * scaleX));
+        sh = Math.max(1, Math.min(currentImage.height - sy, currentCrop.h * scaleY));
     }
 
     const finalW = parseInt(resizeW.value) || sw;
@@ -978,47 +1117,31 @@ async function applyChanges() {
 
     if (selectedTargetKB) {
         const targetBytes = selectedTargetKB * 1024;
+        const targetResult = await encodeTargetSize(canvas, format, targetBytes, quality);
 
-        if (supportsQuality) {
-            let currentQuality = Math.min(0.95, quality);
-            let blob = await new Promise(resolve => canvas.toBlob(resolve, format, currentQuality));
+        if (!targetResult.blob) {
+            throw new Error('Image compression failed.');
+        }
 
-            if (!blob) throw new Error('Image compression failed.');
+        processedBlob = targetResult.blob;
 
-            if (blob.size > targetBytes) {
-                let low = 0.01;
-                let high = currentQuality;
-                let bestBlob = null;
-
-                for (let i = 0; i < 8; i++) {
-                    const mid = (low + high) / 2;
-                    const nextBlob = await new Promise(resolve => canvas.toBlob(resolve, format, mid));
-                    if (!nextBlob) break;
-
-                    if (nextBlob.size <= targetBytes) {
-                        bestBlob = nextBlob;
-                        low = mid;
-                    } else {
-                        high = mid;
-                    }
-                }
-
-                blob = bestBlob || await new Promise(resolve => canvas.toBlob(resolve, format, low));
-            }
-
-            processedBlob = blob;
-        } else {
-            processedBlob = await new Promise(resolve => canvas.toBlob(resolve, format));
+        if (!targetResult.fitsTarget) {
+            console.warn('PixelResize could not reach the requested target size.', {
+                targetBytes,
+                actualBytes: processedBlob.size,
+                width: targetResult.width,
+                height: targetResult.height
+            });
         }
     } else if (activeTab === 'compress' && supportsQuality) {
         let currentQuality = Math.min(0.95, quality);
-        let blob = await new Promise(resolve => canvas.toBlob(resolve, format, currentQuality));
+        let blob = await canvasToBlob(canvas, format, currentQuality);
 
         if (!blob) throw new Error('Image compression failed.');
 
         while (originalSize > 0 && blob.size >= originalSize && currentQuality > 0.05) {
             currentQuality = Math.max(0.05, currentQuality - 0.05);
-            const nextBlob = await new Promise(resolve => canvas.toBlob(resolve, format, currentQuality));
+            const nextBlob = await canvasToBlob(canvas, format, currentQuality);
             if (!nextBlob) break;
             blob = nextBlob;
         }
@@ -1027,7 +1150,7 @@ async function applyChanges() {
             ? originalFile
             : blob;
     } else {
-        processedBlob = await new Promise(resolve => canvas.toBlob(resolve, format, quality));
+        processedBlob = await canvasToBlob(canvas, format, quality);
         if (!processedBlob) throw new Error('Image processing failed.');
     }
 
