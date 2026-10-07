@@ -967,10 +967,12 @@ async function encodeTargetSize(canvas, format, targetBytes, startQuality = 0.95
     let height = canvas.height;
 
     // First try the current dimensions. Binary-search the highest quality
-    // that stays at or below the requested byte ceiling.
+    // that stays at or below the requested byte ceiling. Target-size mode
+    // should prioritize visual quality, so the user's compression-slider
+    // quality is a starting point, not a hard upper limit.
     for (let dimensionPass = 0; dimensionPass < 10; dimensionPass++) {
         let low = 0.01;
-        let high = Math.min(0.95, Math.max(0.01, startQuality));
+        let high = 1;
         let highBlob = await canvasToBlob(workingCanvas, format, high);
         if (!highBlob) throw new Error('Image compression failed.');
 
@@ -1001,7 +1003,7 @@ async function encodeTargetSize(canvas, format, targetBytes, startQuality = 0.95
         if (minimumQualityBlob.size <= targetBytes) {
             best = minimumQualityBlob;
             let low = 0.01;
-            let high = Math.min(0.95, Math.max(0.01, startQuality));
+            let high = 1;
             for (let i = 0; i < 10; i++) {
                 const mid = (low + high) / 2;
                 const candidate = await canvasToBlob(workingCanvas, format, mid);
