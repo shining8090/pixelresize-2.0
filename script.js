@@ -225,7 +225,7 @@ function updateSEO(tool, displayName = 'Editor') {
     const h1 = document.getElementById('main-h1');
     if (h1) {
         if (tool === 'home') {
-            h1.innerHTML = 'The Most <span class="text-gradient">Secure</span> Way to Edit Images';
+            h1.innerHTML = 'Free Online <span class="text-gradient">Image Resizer</span> &amp; Compressor';
         } else if (data.h1) {
             h1.textContent = data.h1;
         } else if (data.h2) {
