@@ -947,6 +947,13 @@ function endCropAction(e) {
 }
 
 async function canvasToBlob(canvas, format, quality) {
+    // Canvas APIs do not natively encode GIF in most browsers. Route GIF
+    // requests through the locally bundled encoder instead of silently
+    // accepting the browser's PNG fallback.
+    if (format === 'image/gif') {
+        return canvasToGifBlob(canvas);
+    }
+
     return new Promise(resolve => {
         const callback = blob => resolve(blob || null);
         if (typeof quality === 'number' && ['image/jpeg', 'image/webp', 'image/avif'].includes(format)) {
@@ -955,6 +962,48 @@ async function canvasToBlob(canvas, format, quality) {
             canvas.toBlob(callback, format);
         }
     });
+}
+
+function canvasToGifBlob(canvas) {
+    if (typeof GifWriter !== 'function') {
+        throw new Error('GIF encoder is unavailable. Refresh the page and try again.');
+    }
+
+    const width = canvas.width;
+    const height = canvas.height;
+    if (!width || !height || width > 65535 || height > 65535) {
+        throw new Error('Image dimensions are not supported for GIF conversion.');
+    }
+
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) throw new Error('Could not read image pixels for GIF conversion.');
+
+    const imageData = ctx.getImageData(0, 0, width, height).data;
+    const palette = new Array(256);
+    for (let index = 0; index < 256; index++) {
+        const red = ((index >> 5) & 7) * 255 / 7;
+        const green = ((index >> 2) & 7) * 255 / 7;
+        const blue = (index & 3) * 255 / 3;
+        palette[index] = (Math.round(red) << 16) | (Math.round(green) << 8) | Math.round(blue);
+    }
+
+    // GIF supports a maximum of 256 colors. Use a 3-3-2 RGB palette and
+    // composite transparent pixels against white because GIF transparency
+    // is not represented by this simple single-frame conversion.
+    const indexedPixels = new Uint8Array(width * height);
+    for (let source = 0, target = 0; target < indexedPixels.length; source += 4, target++) {
+        const alpha = imageData[source + 3] / 255;
+        const red = Math.round(imageData[source] * alpha + 255 * (1 - alpha));
+        const green = Math.round(imageData[source + 1] * alpha + 255 * (1 - alpha));
+        const blue = Math.round(imageData[source + 2] * alpha + 255 * (1 - alpha));
+        indexedPixels[target] = ((red >> 5) << 5) | ((green >> 5) << 2) | (blue >> 6);
+    }
+
+    const output = new Uint8Array(width * height * 2 + 4096);
+    const writer = new GifWriter(output, width, height, { palette });
+    writer.addFrame(0, 0, width, height, indexedPixels);
+    const length = writer.end();
+    return new Blob([output.subarray(0, length)], { type: 'image/gif' });
 }
 
 async function encodeTargetSize(canvas, format, targetBytes, startQuality = 0.95) {
