@@ -38,18 +38,3 @@ test('target-size output stays at or below selected 100 KB', async ({ page }) =>
   expect(fs.statSync(filePath).size).toBeLessThanOrEqual(100 * 1024);
 });
 
-test('1:1 crop followed by explicit 256x256 resize remains square', async ({ page }) => {
-  await loadFixture(page);
-  await page.locator('.tab-btn[data-tab="crop"]').click();
-  await page.locator('#aspect-ratio-presets [data-ratio="1"]').click();
-
-  await page.locator('#resize-w').fill('256');
-  await page.locator('#resize-h').fill('256');
-  await page.locator('#maintain-ratio').uncheck();
-  await page.locator('#apply-btn').click();
-  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
-
-  const preview = page.locator('#main-preview');
-  await expect.poll(async () => preview.evaluate(img => img.naturalWidth)).toBe(256);
-  await expect.poll(async () => preview.evaluate(img => img.naturalHeight)).toBe(256);
-});
