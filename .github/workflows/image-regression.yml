@@ -1,0 +1,61 @@
+name: PixelResize Image Regression Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Choose which automated regression checks to run'
+        required: true
+        type: choice
+        options:
+          - all
+          - target-size
+          - crop-resize
+        default: all
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pixelresize-image-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-regression:
+    name: Image processing regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out selected branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright test runner
+        run: npm install --no-save @playwright/test
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Start local static server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/pixelresize-server.log 2>&1 &
+          for i in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/pixelresize-server.log
+          exit 1
+
+      - name: Run target-size compression regression
+        if: inputs.test_suite == 'all' || inputs.test_suite == 'target-size'
+        run: npx playwright test tests/target-size.spec.cjs --reporter=line
+
+      - name: Run crop and resize regression
+        if: inputs.test_suite == 'all' || inputs.test_suite == 'crop-resize'
+        run: npx playwright test tests/crop-resize.spec.cjs --reporter=line
