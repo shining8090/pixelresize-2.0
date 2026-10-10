@@ -1,6 +1,15 @@
 name: PixelResize Image Regression Tests
 
 on:
+  push:
+    branches:
+      - seo-tool-logic-fix-2026-10-07
+    paths:
+      - 'script.js'
+      - 'index.html'
+      - 'tests/**'
+      - 'playwright.config.cjs'
+      - '.github/workflows/image-regression.yml'
   workflow_dispatch:
     inputs:
       test_suite:
