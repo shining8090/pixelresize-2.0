@@ -22,6 +22,10 @@ test('1:1 crop followed by explicit 256x256 resize preserves dimensions and cent
 
   await page.locator('.tab-btn[data-tab="crop"]').click();
   await page.locator('#aspect-ratio-presets [data-ratio="1"]').click();
+
+  // Resize inputs live inside the Resize tab; switch back before filling them.
+  // The crop rectangle is retained by the crop engine across tab changes.
+  await page.locator('.tab-btn[data-tab="resize"]').click();
   await page.locator('#resize-w').fill('256');
   await page.locator('#resize-h').fill('256');
   await page.locator('#maintain-ratio').uncheck();
