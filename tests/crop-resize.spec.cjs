@@ -23,12 +23,14 @@ test('1:1 crop followed by explicit 256x256 resize preserves dimensions and cent
   await page.locator('.tab-btn[data-tab="crop"]').click();
   await page.locator('#aspect-ratio-presets [data-ratio="1"]').click();
 
-  // Resize inputs live inside the Resize tab; switch back before filling them.
-  // The crop rectangle is retained by the crop engine across tab changes.
+  // Resize inputs live inside the Resize tab; switching tabs preserves the crop rectangle.
   await page.locator('.tab-btn[data-tab="resize"]').click();
+
+  // Disable aspect-ratio locking before entering both dimensions, otherwise the
+  // second field recalculates the first from the original 1200x800 image ratio.
+  await page.locator('#maintain-ratio').uncheck();
   await page.locator('#resize-w').fill('256');
   await page.locator('#resize-h').fill('256');
-  await page.locator('#maintain-ratio').uncheck();
 
   await page.locator('#apply-btn').click();
   await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
