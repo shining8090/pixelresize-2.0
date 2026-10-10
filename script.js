@@ -979,24 +979,143 @@ function canvasToGifBlob(canvas) {
     if (!ctx) throw new Error('Could not read image pixels for GIF conversion.');
 
     const imageData = ctx.getImageData(0, 0, width, height).data;
-    const palette = new Array(256);
-    for (let index = 0; index < 256; index++) {
-        const red = ((index >> 5) & 7) * 255 / 7;
-        const green = ((index >> 2) & 7) * 255 / 7;
-        const blue = (index & 3) * 255 / 3;
-        palette[index] = (Math.round(red) << 16) | (Math.round(green) << 8) | Math.round(blue);
+    const pixelCount = width * height;
+
+    // Build a weighted 5-bit-per-channel histogram from the actual image,
+    // compositing transparency against white because this is a single-frame GIF.
+    const HIST_SIZE = 32 * 32 * 32;
+    const counts = new Uint32Array(HIST_SIZE);
+    const redSums = new Float64Array(HIST_SIZE);
+    const greenSums = new Float64Array(HIST_SIZE);
+    const blueSums = new Float64Array(HIST_SIZE);
+
+    for (let source = 0; source < imageData.length; source += 4) {
+        const alpha = imageData[source + 3] / 255;
+        const red = Math.round(imageData[source] * alpha + 255 * (1 - alpha));
+        const green = Math.round(imageData[source + 1] * alpha + 255 * (1 - alpha));
+        const blue = Math.round(imageData[source + 2] * alpha + 255 * (1 - alpha));
+        const key = ((red >> 3) << 10) | ((green >> 3) << 5) | (blue >> 3);
+        counts[key]++;
+        redSums[key] += red;
+        greenSums[key] += green;
+        blueSums[key] += blue;
     }
 
-    // GIF supports a maximum of 256 colors. Use a 3-3-2 RGB palette and
-    // composite transparent pixels against white because GIF transparency
-    // is not represented by this simple single-frame conversion.
-    const indexedPixels = new Uint8Array(width * height);
+    const colors = [];
+    for (let key = 0; key < HIST_SIZE; key++) {
+        if (!counts[key]) continue;
+        colors.push({
+            key,
+            count: counts[key],
+            r: redSums[key] / counts[key],
+            g: greenSums[key] / counts[key],
+            b: blueSums[key] / counts[key]
+        });
+    }
+
+    // Median-cut quantization creates a palette tailored to this image rather
+    // than forcing every image into a fixed 3-3-2 RGB palette.
+    let boxes = [colors];
+    while (boxes.length < 256) {
+        let splitIndex = -1;
+        let splitScore = -1;
+        let splitChannel = 'r';
+
+        for (let i = 0; i < boxes.length; i++) {
+            const box = boxes[i];
+            if (box.length < 2) continue;
+            let minR = 255, maxR = 0, minG = 255, maxG = 0, minB = 255, maxB = 0;
+            let weight = 0;
+            for (const color of box) {
+                minR = Math.min(minR, color.r); maxR = Math.max(maxR, color.r);
+                minG = Math.min(minG, color.g); maxG = Math.max(maxG, color.g);
+                minB = Math.min(minB, color.b); maxB = Math.max(maxB, color.b);
+                weight += color.count;
+            }
+            const ranges = [maxR - minR, maxG - minG, maxB - minB];
+            const channel = ranges.indexOf(Math.max(...ranges));
+            const score = ranges[channel] * Math.log2(weight + 1);
+            if (score > splitScore) {
+                splitScore = score;
+                splitIndex = i;
+                splitChannel = ['r', 'g', 'b'][channel];
+            }
+        }
+
+        if (splitIndex < 0 || splitScore <= 0) break;
+        const box = boxes[splitIndex].slice().sort((a, b) => a[splitChannel] - b[splitChannel]);
+        const total = box.reduce((sum, color) => sum + color.count, 0);
+        let cumulative = 0;
+        let cut = 1;
+        for (; cut < box.length; cut++) {
+            cumulative += box[cut - 1].count;
+            if (cumulative >= total / 2) break;
+        }
+        boxes.splice(splitIndex, 1, box.slice(0, cut), box.slice(cut));
+    }
+
+    const palette = [];
+    const paletteColors = [];
+    for (const box of boxes) {
+        let total = 0, r = 0, g = 0, b = 0;
+        for (const color of box) {
+            total += color.count;
+            r += color.r * color.count;
+            g += color.g * color.count;
+            b += color.b * color.count;
+        }
+        const color = {
+            r: Math.round(r / total),
+            g: Math.round(g / total),
+            b: Math.round(b / total)
+        };
+        paletteColors.push(color);
+        palette.push((color.r << 16) | (color.g << 8) | color.b);
+    }
+
+    // GIF global palettes must contain a power-of-two number of entries.
+    while (palette.length < 2) {
+        palette.push(palette[0] || 0xffffff);
+        paletteColors.push(paletteColors[0] || { r: 255, g: 255, b: 255 });
+    }
+    let tableSize = 2;
+    while (tableSize < palette.length) tableSize <<= 1;
+    while (palette.length < tableSize) {
+        palette.push(palette[palette.length - 1]);
+        paletteColors.push(paletteColors[paletteColors.length - 1]);
+    }
+
+    // Cache nearest palette color for every 5-bit RGB histogram cell so the
+    // full-resolution pixel pass remains fast even for large photographs.
+    const colorLookup = new Uint8Array(HIST_SIZE);
+    for (let key = 0; key < HIST_SIZE; key++) {
+        if (!counts[key]) continue;
+        const r = redSums[key] / counts[key];
+        const g = greenSums[key] / counts[key];
+        const b = blueSums[key] / counts[key];
+        let nearest = 0;
+        let bestDistance = Infinity;
+        for (let i = 0; i < paletteColors.length; i++) {
+            const dr = r - paletteColors[i].r;
+            const dg = g - paletteColors[i].g;
+            const db = b - paletteColors[i].b;
+            const distance = dr * dr + dg * dg + db * db;
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                nearest = i;
+            }
+        }
+        colorLookup[key] = nearest;
+    }
+
+    const indexedPixels = new Uint8Array(pixelCount);
     for (let source = 0, target = 0; target < indexedPixels.length; source += 4, target++) {
         const alpha = imageData[source + 3] / 255;
         const red = Math.round(imageData[source] * alpha + 255 * (1 - alpha));
         const green = Math.round(imageData[source + 1] * alpha + 255 * (1 - alpha));
         const blue = Math.round(imageData[source + 2] * alpha + 255 * (1 - alpha));
-        indexedPixels[target] = ((red >> 5) << 5) | ((green >> 5) << 2) | (blue >> 6);
+        const key = ((red >> 3) << 10) | ((green >> 3) << 5) | (blue >> 3);
+        indexedPixels[target] = colorLookup[key];
     }
 
     const output = new Uint8Array(width * height * 2 + 4096);
