@@ -1085,14 +1085,14 @@ function canvasToGifBlob(canvas) {
         paletteColors.push(paletteColors[paletteColors.length - 1]);
     }
 
-    // Cache nearest palette color for every 5-bit RGB histogram cell so the
-    // full-resolution pixel pass remains fast even for large photographs.
+    // Cache nearest palette colors for every 5-bit RGB cell. Every cell must
+    // be mapped because dithering can move a pixel into a cell absent in the
+    // original image histogram.
     const colorLookup = new Uint8Array(HIST_SIZE);
     for (let key = 0; key < HIST_SIZE; key++) {
-        if (!counts[key]) continue;
-        const r = redSums[key] / counts[key];
-        const g = greenSums[key] / counts[key];
-        const b = blueSums[key] / counts[key];
+        const r = counts[key] ? redSums[key] / counts[key] : (((key >> 10) & 31) * 8 + 4);
+        const g = counts[key] ? greenSums[key] / counts[key] : (((key >> 5) & 31) * 8 + 4);
+        const b = counts[key] ? blueSums[key] / counts[key] : ((key & 31) * 8 + 4);
         let nearest = 0;
         let bestDistance = Infinity;
         for (let i = 0; i < paletteColors.length; i++) {
@@ -1108,14 +1108,52 @@ function canvasToGifBlob(canvas) {
         colorLookup[key] = nearest;
     }
 
+    // Floyd-Steinberg dithering reduces visible color banding in photographs.
+    // Keep only two rows of error values so large images do not need a second
+    // full-resolution RGB buffer.
     const indexedPixels = new Uint8Array(pixelCount);
-    for (let source = 0, target = 0; target < indexedPixels.length; source += 4, target++) {
-        const alpha = imageData[source + 3] / 255;
-        const red = Math.round(imageData[source] * alpha + 255 * (1 - alpha));
-        const green = Math.round(imageData[source + 1] * alpha + 255 * (1 - alpha));
-        const blue = Math.round(imageData[source + 2] * alpha + 255 * (1 - alpha));
-        const key = ((red >> 3) << 10) | ((green >> 3) << 5) | (blue >> 3);
-        indexedPixels[target] = colorLookup[key];
+    let currentR = new Float32Array(width + 2);
+    let currentG = new Float32Array(width + 2);
+    let currentB = new Float32Array(width + 2);
+    let nextR = new Float32Array(width + 2);
+    let nextG = new Float32Array(width + 2);
+    let nextB = new Float32Array(width + 2);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const source = (y * width + x) * 4;
+            const target = y * width + x;
+            const alpha = imageData[source + 3] / 255;
+            const red = Math.max(0, Math.min(255, imageData[source] * alpha + 255 * (1 - alpha) + currentR[x + 1]));
+            const green = Math.max(0, Math.min(255, imageData[source + 1] * alpha + 255 * (1 - alpha) + currentG[x + 1]));
+            const blue = Math.max(0, Math.min(255, imageData[source + 2] * alpha + 255 * (1 - alpha) + currentB[x + 1]));
+            const key = ((Math.round(red) >> 3) << 10) | ((Math.round(green) >> 3) << 5) | (Math.round(blue) >> 3);
+            const paletteIndex = colorLookup[key];
+            indexedPixels[target] = paletteIndex;
+
+            const chosen = paletteColors[paletteIndex];
+            const errorR = red - chosen.r;
+            const errorG = green - chosen.g;
+            const errorB = blue - chosen.b;
+
+            currentR[x + 2] += errorR * 7 / 16;
+            currentG[x + 2] += errorG * 7 / 16;
+            currentB[x + 2] += errorB * 7 / 16;
+            nextR[x] += errorR * 3 / 16;
+            nextG[x] += errorG * 3 / 16;
+            nextB[x] += errorB * 3 / 16;
+            nextR[x + 1] += errorR * 5 / 16;
+            nextG[x + 1] += errorG * 5 / 16;
+            nextB[x + 1] += errorB * 5 / 16;
+            nextR[x + 2] += errorR / 16;
+            nextG[x + 2] += errorG / 16;
+            nextB[x + 2] += errorB / 16;
+        }
+
+        currentR = nextR; currentG = nextG; currentB = nextB;
+        nextR = new Float32Array(width + 2);
+        nextG = new Float32Array(width + 2);
+        nextB = new Float32Array(width + 2);
     }
 
     const output = new Uint8Array(width * height * 2 + 4096);
