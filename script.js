@@ -954,6 +954,22 @@ async function canvasToBlob(canvas, format, quality) {
         return canvasToGifBlob(canvas);
     }
 
+    // Use a WebAssembly AVIF encoder when the browser's canvas encoder is
+    // unavailable. Image pixels are processed locally; only the codec code
+    // is loaded from the public module URL.
+    if (format === 'image/avif') {
+        const { AVIF } = await import('https://code4fukui.github.io/AVIF/AVIF.js');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) throw new Error('AVIF conversion could not access image pixels.');
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const encoded = AVIF.encode(imageData, {
+            quality: Math.max(0, Math.min(100, Math.round((typeof quality === 'number' ? quality : 0.85) * 100))),
+            speed: 8
+        });
+        if (!encoded || !encoded.length) throw new Error('AVIF encoder returned an empty image.');
+        return new Blob([encoded], { type: 'image/avif' });
+    }
+
     return new Promise(resolve => {
         const callback = blob => resolve(blob || null);
         if (typeof quality === 'number' && ['image/jpeg', 'image/webp', 'image/avif'].includes(format)) {
