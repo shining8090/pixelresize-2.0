@@ -11,7 +11,7 @@ const fixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height=
   <circle cx="600" cy="400" r="180" fill="#fef3c7"/>
 </svg>`;
 
-test('1:1 crop followed by explicit 256x256 resize remains square', async ({ page }) => {
+test('1:1 crop followed by explicit 256x256 resize preserves dimensions and center content', async ({ page }) => {
   await page.goto('/');
   await page.locator('#file-input').setInputFiles({
     name: 'crop-regression-fixture.svg',
@@ -32,4 +32,16 @@ test('1:1 crop followed by explicit 256x256 resize remains square', async ({ pag
   const preview = page.locator('#main-preview');
   await expect.poll(async () => preview.evaluate(img => img.naturalWidth)).toBe(256);
   await expect.poll(async () => preview.evaluate(img => img.naturalHeight)).toBe(256);
+
+  const center = await preview.evaluate(img => {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    return Array.from(ctx.getImageData(128, 128, 1, 1).data);
+  });
+  expect(center[0]).toBeGreaterThan(220);
+  expect(center[1]).toBeGreaterThan(200);
+  expect(center[2]).toBeGreaterThan(150);
 });
