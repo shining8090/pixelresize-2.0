@@ -62,9 +62,9 @@ jobs:
           exit 1
 
       - name: Run target-size compression regression
-        if: inputs.test_suite == 'all' || inputs.test_suite == 'target-size'
+        if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'target-size'
         run: npx playwright test tests/target-size.spec.cjs --reporter=line
 
       - name: Run crop and resize regression
-        if: inputs.test_suite == 'all' || inputs.test_suite == 'crop-resize'
+        if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'crop-resize'
         run: npx playwright test tests/crop-resize.spec.cjs --reporter=line
