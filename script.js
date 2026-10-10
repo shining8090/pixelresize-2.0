@@ -1384,6 +1384,15 @@ async function applyChanges() {
         if (!processedBlob) throw new Error('Image processing failed.');
     }
 
+    // Never silently accept the browser's PNG fallback for an AVIF request.
+    // The actual Blob MIME type is the source of truth for the exported format.
+    if (format === 'image/avif' && processedBlob?.type !== 'image/avif') {
+        processedBlob = null;
+        applyBtn.textContent = 'Apply Changes';
+        alert('AVIF export is not supported by this browser. Please try a browser with AVIF canvas export support. No PNG file was substituted.');
+        return;
+    }
+
     if (processedDataUrl && processedDataUrl.startsWith('blob:')) {
         URL.revokeObjectURL(processedDataUrl);
     }
