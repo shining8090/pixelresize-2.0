@@ -443,22 +443,22 @@ ul {
 
 .remove-btn {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 12px;
+    right: 12px;
     background: #ef4444;
     color: white;
     border: none;
     width: 36px;
     height: 36px;
-    border-radius: 12px;
+    padding: 0;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 24px;
     z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .remove-btn:hover { 
