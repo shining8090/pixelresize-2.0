@@ -22,19 +22,26 @@ async function loadFixture(page) {
   await expect(page.locator('#main-preview')).toHaveJSProperty('complete', true);
 }
 
-test('target-size output stays at or below selected 100 KB', async ({ page }) => {
-  await loadFixture(page);
-  await page.locator('.tab-btn[data-tab="target"]').click();
-  await page.locator('#tab-target [data-target="100"]').click();
-  await page.locator('#apply-btn').click();
-  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+for (const targetKB of [10, 50, 100, 200]) {
+  test(`JPG target-size output stays at or below selected ${targetKB} KB`, async ({ page }) => {
+    await loadFixture(page);
 
-  const downloadPromise = page.waitForEvent('download');
-  await page.locator('#download-btn').click();
-  const download = await downloadPromise;
-  const filePath = await download.path();
-  expect(filePath).toBeTruthy();
-  const fs = require('fs');
-  expect(fs.statSync(filePath).size).toBeLessThanOrEqual(100 * 1024);
-});
+    // Target-size compression must exercise a lossy format; PNG does not use
+    // the quality-search path because canvas PNG encoding ignores quality.
+    await page.locator('#tab-convert [data-format="image/jpeg"]').click();
+    await page.locator('.tab-btn[data-tab="target"]').click();
+    await page.locator(`#tab-target [data-target="${targetKB}"]`).click();
+    await page.locator('#apply-btn').click();
+    await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
 
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('#download-btn').click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\\.jpg$/i);
+
+    const filePath = await download.path();
+    expect(filePath).toBeTruthy();
+    const fs = require('fs');
+    expect(fs.statSync(filePath).size).toBeLessThanOrEqual(targetKB * 1024);
+  });
+}
