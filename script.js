@@ -1484,7 +1484,7 @@ function handleDownload() {
     
     const link = document.createElement('a');
     const mime = processedBlob.type || 'image/png';
-    const ext = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/avif': 'avif', 'image/gif': 'gif' })[mime] || 'png';
+    const ext = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/avif': 'avif', 'image/gif': 'gif', 'image/bmp': 'bmp' })[mime] || 'png';
     link.download = `pixelresize-${Date.now()}.${ext}`;
     
     // Use the already generated blob URL
