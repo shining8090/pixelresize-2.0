@@ -1257,7 +1257,7 @@ async function encodeTargetSize(canvas, format, targetBytes, startQuality = 0.95
     // that stays at or below the requested byte ceiling. Target-size mode
     // should prioritize visual quality, so the user's compression-slider
     // quality is a starting point, not a hard upper limit.
-    for (let dimensionPass = 0; dimensionPass < 10; dimensionPass++) {
+    for (let dimensionPass = 0; dimensionPass < 16; dimensionPass++) {
         let low = 0.01;
         let high = 1;
         let highBlob = await canvasToBlob(workingCanvas, format, high);
@@ -1265,7 +1265,7 @@ async function encodeTargetSize(canvas, format, targetBytes, startQuality = 0.95
 
         if (highBlob.size <= targetBytes) {
             best = highBlob;
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 12; i++) {
                 const mid = (low + high) / 2;
                 const candidate = await canvasToBlob(workingCanvas, format, mid);
                 if (!candidate) break;
@@ -1291,7 +1291,7 @@ async function encodeTargetSize(canvas, format, targetBytes, startQuality = 0.95
             best = minimumQualityBlob;
             let low = 0.01;
             let high = 1;
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 12; i++) {
                 const mid = (low + high) / 2;
                 const candidate = await canvasToBlob(workingCanvas, format, mid);
                 if (!candidate) break;
@@ -1310,11 +1310,11 @@ async function encodeTargetSize(canvas, format, targetBytes, startQuality = 0.95
             };
         }
 
-        // Quality alone cannot reach the target. Reduce pixel dimensions and
-        // try again. This is the missing step that caused large files to be
-        // saved even when the UI showed a target KB value.
+        // Quality alone cannot reach the target at these dimensions. Estimate
+        // the next dimensions from the observed minimum-quality file size,
+        // using a conservative reduction so we retain more pixels between passes.
         const ratio = Math.sqrt(targetBytes / Math.max(minimumQualityBlob.size, 1));
-        const scale = Math.max(0.45, Math.min(0.88, ratio * 0.92));
+        const scale = Math.max(0.1, Math.min(0.95, ratio * 0.98));
         const nextWidth = Math.max(64, Math.floor(width * scale));
         const nextHeight = Math.max(64, Math.floor(height * scale));
 
