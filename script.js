@@ -947,6 +947,50 @@ function endCropAction(e) {
 }
 
 async function canvasToBlob(canvas, format, quality) {
+    // Canvas APIs do not natively encode BMP. Write a standard 24-bit BMP
+    // locally so the requested format is never silently replaced by PNG.
+    if (format === 'image/bmp') {
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) throw new Error('BMP conversion could not access image pixels.');
+        const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const width = canvas.width;
+        const height = canvas.height;
+        const rowSize = Math.floor((width * 3 + 3) / 4) * 4;
+        const pixelBytes = rowSize * height;
+        const buffer = new ArrayBuffer(54 + pixelBytes);
+        const view = new DataView(buffer);
+        const bytes = new Uint8Array(buffer);
+
+        // BITMAPFILEHEADER
+        view.setUint8(0, 0x42);
+        view.setUint8(1, 0x4D);
+        view.setUint32(2, 54 + pixelBytes, true);
+        view.setUint32(10, 54, true);
+
+        // BITMAPINFOHEADER
+        view.setUint32(14, 40, true);
+        view.setInt32(18, width, true);
+        view.setInt32(22, height, true);
+        view.setUint16(26, 1, true);
+        view.setUint16(28, 24, true);
+        view.setUint32(34, pixelBytes, true);
+        view.setInt32(38, 2835, true);
+        view.setInt32(42, 2835, true);
+
+        for (let y = 0; y < height; y++) {
+            const sourceY = height - 1 - y;
+            const rowStart = 54 + y * rowSize;
+            for (let x = 0; x < width; x++) {
+                const source = (sourceY * width + x) * 4;
+                const target = rowStart + x * 3;
+                bytes[target] = data[source + 2];     // Blue
+                bytes[target + 1] = data[source + 1]; // Green
+                bytes[target + 2] = data[source];     // Red
+            }
+        }
+        return new Blob([buffer], { type: 'image/bmp' });
+    }
+
     // Canvas APIs do not natively encode GIF in most browsers. Route GIF
     // requests through the locally bundled encoder instead of silently
     // accepting the browser's PNG fallback.
