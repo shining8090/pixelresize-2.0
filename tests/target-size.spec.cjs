@@ -26,8 +26,9 @@ for (const targetKB of [10, 50, 100, 200]) {
   test(`JPG target-size output stays at or below selected ${targetKB} KB`, async ({ page }) => {
     await loadFixture(page);
 
-    // Target-size compression must exercise a lossy format; PNG does not use
-    // the quality-search path because canvas PNG encoding ignores quality.
+    // Choose JPG while the Convert panel is visible, then switch to Target.
+    // PNG ignores canvas quality settings, so JPG exercises the lossy search path.
+    await page.locator('.tab-btn[data-tab="convert"]').click();
     await page.locator('#tab-convert [data-format="image/jpeg"]').click();
     await page.locator('.tab-btn[data-tab="target"]').click();
     await page.locator(`#tab-target [data-target="${targetKB}"]`).click();
