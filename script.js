@@ -965,7 +965,15 @@ async function canvasToBlob(canvas, format, quality) {
         const encoded = AVIF.encode(imageData, {
             quality: Math.max(0, Math.min(100, Math.round((typeof quality === 'number' ? quality : 0.85) * 100))),
             qualityAlpha: -1,
-            speed: 8
+            tileRowsLog2: 0,
+            tileColsLog2: 0,
+            speed: 8,
+            chromaDeltaQ: false,
+            sharpness: 0,
+            tune: 0,
+            denoiseLevel: 0,
+            subsample: 3,
+            enableSharpYUV: false
         });
         if (!encoded || !encoded.length) throw new Error('AVIF encoder returned an empty image.');
         return new Blob([encoded], { type: 'image/avif' });
