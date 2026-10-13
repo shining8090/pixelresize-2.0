@@ -24,6 +24,7 @@ on:
           - transform
           - standard-convert
           - avif-convert
+          - bmp-convert
           - privacy-errors
         default: all
 
@@ -89,6 +90,10 @@ jobs:
       - name: Run AVIF conversion regression
         if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'avif-convert'
         run: npx playwright test tests/avif-convert.spec.cjs --reporter=line
+
+      - name: Run BMP conversion regression
+        if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'bmp-convert'
+        run: npx playwright test tests/bmp-convert.spec.cjs --reporter=line
 
       - name: Run privacy and error-handling regression
         if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'privacy-errors'
