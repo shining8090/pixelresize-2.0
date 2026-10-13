@@ -9,7 +9,10 @@ test('image processing does not upload image data to a remote host', async ({ pa
   const remoteRequests = [];
   page.on('request', request => {
     const url = request.url();
-    if (!url.startsWith('http://127.0.0.1:8000') && !url.startsWith('http://localhost:8000') && !url.startsWith('data:') && !url.startsWith('blob:') && !url.startsWith('file:')) {
+    // Chromium may send a browser-generated CSP diagnostic report to Google.
+    // This report contains security-policy diagnostics, not the image being processed.
+    const isBrowserCspReport = url.startsWith('https://csp.withgoogle.com/csp/frame-ancestors/');
+    if (!url.startsWith('http://127.0.0.1:8000') && !url.startsWith('http://localhost:8000') && !url.startsWith('data:') && !url.startsWith('blob:') && !url.startsWith('file:') && !isBrowserCspReport) {
       if (['POST', 'PUT', 'PATCH'].includes(request.method())) remoteRequests.push({ method: request.method(), url });
     }
   });
