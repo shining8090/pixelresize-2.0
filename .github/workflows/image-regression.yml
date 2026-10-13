@@ -24,6 +24,7 @@ on:
           - transform
           - standard-convert
           - avif-convert
+          - privacy-errors
         default: all
 
 permissions:
@@ -88,3 +89,7 @@ jobs:
       - name: Run AVIF conversion regression
         if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'avif-convert'
         run: npx playwright test tests/avif-convert.spec.cjs --reporter=line
+
+      - name: Run privacy and error-handling regression
+        if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'privacy-errors'
+        run: npx playwright test tests/privacy-errors.spec.cjs --reporter=line
