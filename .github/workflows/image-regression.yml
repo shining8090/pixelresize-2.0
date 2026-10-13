@@ -23,6 +23,7 @@ on:
           - gif-convert
           - transform
           - standard-convert
+          - avif-convert
         default: all
 
 permissions:
@@ -83,3 +84,7 @@ jobs:
       - name: Run JPG, PNG and WebP conversion regressions
         if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'standard-convert'
         run: npx playwright test tests/standard-convert.spec.cjs --reporter=line
+
+      - name: Run AVIF conversion regression
+        if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'avif-convert'
+        run: npx playwright test tests/avif-convert.spec.cjs --reporter=line
