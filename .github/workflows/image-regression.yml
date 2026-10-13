@@ -22,6 +22,7 @@ on:
           - crop-resize
           - gif-convert
           - transform
+          - standard-convert
         default: all
 
 permissions:
@@ -78,3 +79,7 @@ jobs:
       - name: Run rotate and flip regression
         if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'transform'
         run: npx playwright test tests/transform.spec.cjs --reporter=line
+
+      - name: Run JPG, PNG and WebP conversion regressions
+        if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'standard-convert'
+        run: npx playwright test tests/standard-convert.spec.cjs --reporter=line
