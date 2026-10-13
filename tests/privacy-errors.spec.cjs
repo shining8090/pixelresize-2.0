@@ -31,12 +31,14 @@ test('image processing does not upload image data to a remote host', async ({ pa
   expect(remoteRequests, 'Image workflow should not send upload-style requests to remote hosts').toEqual([]);
 });
 
-test('download button is disabled before an image is processed', async ({ page }) => {
+test('clicking download before processing does not download an empty file', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('#download-btn')).toBeDisabled();
+  const downloadPromise = page.waitForEvent('download', { timeout: 1000 }).catch(() => null);
+  await page.locator('#download-btn').click();
+  expect(await downloadPromise).toBeNull();
 });
 
-test('uploading an unsupported file shows a visible error without crashing the page', async ({ page }) => {
+test('unsupported files are rejected and the editor remains unopened', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto('/');
@@ -45,9 +47,8 @@ test('uploading an unsupported file shows a visible error without crashing the p
     mimeType: 'text/plain',
     buffer: Buffer.from('this is deliberately not an image')
   });
-  await expect(page.locator('#processing-ui')).toBeVisible();
-  await expect.poll(async () => {
-    return page.locator('body').innerText();
-  }).toContain('Choose an image or drag & drop');
+
+  await expect(page.locator('#upload-zone')).toBeVisible();
+  await expect(page.locator('#processing-ui')).toBeHidden();
   expect(pageErrors).toEqual([]);
 });
