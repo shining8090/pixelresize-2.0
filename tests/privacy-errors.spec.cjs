@@ -33,9 +33,13 @@ test('image processing does not upload image data to a remote host', async ({ pa
 
 test('clicking download before processing does not download an empty file', async ({ page }) => {
   await page.goto('/');
-  const downloadPromise = page.waitForEvent('download', { timeout: 1000 }).catch(() => null);
-  await page.locator('#download-btn').click();
-  expect(await downloadPromise).toBeNull();
+  let downloadCount = 0;
+  page.on('download', () => { downloadCount += 1; });
+
+  // Trigger the real button handler without Playwright's pointer/overlay auto-waiting.
+  await page.locator('#download-btn').evaluate(button => button.click());
+  await page.waitForTimeout(250);
+  expect(downloadCount).toBe(0);
 });
 
 test('unsupported files are rejected and the editor remains unopened', async ({ page }) => {
