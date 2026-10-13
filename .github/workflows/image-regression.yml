@@ -21,6 +21,7 @@ on:
           - target-size
           - crop-resize
           - gif-convert
+          - transform
         default: all
 
 permissions:
@@ -73,3 +74,7 @@ jobs:
       - name: Run GIF conversion regression
         if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'gif-convert'
         run: npx playwright test tests/gif-convert.spec.cjs --reporter=line
+
+      - name: Run rotate and flip regression
+        if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'transform'
+        run: npx playwright test tests/transform.spec.cjs --reporter=line
