@@ -38,7 +38,7 @@ for (const targetKB of [10, 50, 100, 200]) {
     const downloadPromise = page.waitForEvent('download');
     await page.locator('#download-btn').click();
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toMatch(/\\.jpg$/i);
+    expect(download.suggestedFilename()).toMatch(/\.jpg$/i);
 
     const filePath = await download.path();
     expect(filePath).toBeTruthy();
