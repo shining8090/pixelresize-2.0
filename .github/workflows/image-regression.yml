@@ -20,6 +20,7 @@ on:
           - all
           - target-size
           - crop-resize
+          - gif-convert
         default: all
 
 permissions:
@@ -68,3 +69,7 @@ jobs:
       - name: Run crop and resize regression
         if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'crop-resize'
         run: npx playwright test tests/crop-resize.spec.cjs --reporter=line
+
+      - name: Run GIF conversion regression
+        if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'gif-convert'
+        run: npx playwright test tests/gif-convert.spec.cjs --reporter=line
