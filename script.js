@@ -761,6 +761,14 @@ async function handleFiles(files) {
             // Set initial inputs
             resizeW.value = img.width;
             resizeH.value = img.height;
+
+            // Preserve the Discord avatar preset after the image loads.
+            // setTool() runs before upload, so handleFiles() must not replace 128x128 with source dimensions.
+            if (document.body.classList.contains('mode-discord-pfp-resizer')) {
+                resizeW.value = 128;
+                resizeH.value = 128;
+            }
+
             infoOrig.textContent = formatBytes(file.size);
             updateInfo();
             
