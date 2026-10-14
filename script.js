@@ -436,7 +436,8 @@ const leaveBtn = document.getElementById('leaveBtn');
 
 function handleInitialRoute() {
     const params = new URLSearchParams(window.location.search);
-    const path = window.location.pathname;
+    // Normalize trailing slashes so dedicated tool routes match consistently.
+    const path = window.location.pathname.replace(/\/+$/, '') || '/';
     const hash = window.location.hash;
     
     // Check for SPA redirected parameters e.g. ?/tools/image-resizer or ?p=/tools/image-resizer
