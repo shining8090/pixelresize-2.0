@@ -38,3 +38,11 @@ test('direct Discord preset opens the dedicated mode with 128x128 dimensions', a
   await expect(page.locator('#resize-w')).toHaveValue('128');
   await expect(page.locator('#resize-h')).toHaveValue('128');
 });
+
+test('direct image-resizer SEO route preserves its URL and selects the Resize tool', async ({ page }) => {
+  await page.goto('/tools/image-resizer/');
+
+  await expect(page).toHaveURL(/\/tools\/image-resizer\/$/);
+  await expect(page).toHaveTitle(/Resize Image Online Free/i);
+  await expect(page.locator('#tab-resize')).toHaveClass(/active/);
+});
