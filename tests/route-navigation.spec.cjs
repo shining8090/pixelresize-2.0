@@ -46,3 +46,29 @@ test('direct image-resizer SEO route preserves its URL and selects the Resize to
   await expect(page).toHaveTitle(/Resize Image Online Free/i);
   await expect(page.locator('#tab-resize')).toHaveClass(/active/);
 });
+ 
+const seoToolRoutes = [
+  { slug: 'image-compressor', title: /Image Compressor Online|Professional Image Compressor Online/i, tab: 'compress' },
+  { slug: 'jpg-to-png', title: /JPG to PNG Converter/i, tab: 'convert', format: 'image/png' },
+  { slug: 'png-to-jpg', title: /PNG to JPG Converter/i, tab: 'convert', format: 'image/jpeg' },
+  { slug: 'jpg-to-webp', title: /JPG to WebP Converter|Convert JPG to WebP/i, tab: 'convert', format: 'image/webp' },
+  { slug: 'to-avif', title: /Convert Image to AVIF|Convert to AVIF/i, tab: 'convert', format: 'image/avif' },
+  { slug: 'to-gif', title: /Convert Image to GIF|Convert JPG to GIF/i, tab: 'convert', format: 'image/gif' },
+  { slug: 'bmp-to-png', title: /BMP to PNG Converter|Convert BMP to PNG/i, tab: 'convert', format: 'image/png' },
+  { slug: 'gif-to-jpg', title: /GIF to JPG Converter|Convert GIF to JPG/i, tab: 'convert', format: 'image/jpeg' },
+  { slug: 'transform', title: /Transform Image Online/i, tab: 'transform' }
+];
+
+for (const route of seoToolRoutes) {
+  test(`direct SEO route /tools/${route.slug}/ preserves its URL and selects the expected tool`, async ({ page }) => {
+    await page.goto(`/tools/${route.slug}/`);
+
+    await expect(page).toHaveURL(new RegExp(`/tools/${route.slug}/$`));
+    await expect(page).toHaveTitle(route.title);
+    await expect(page.locator(`#tab-${route.tab}`)).toHaveClass(/active/);
+
+    if (route.format) {
+      await expect(page.locator(`#tab-convert .btn-chip[data-format="${route.format}"]`)).toHaveClass(/active/);
+    }
+  });
+}
