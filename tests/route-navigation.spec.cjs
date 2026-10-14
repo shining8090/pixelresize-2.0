@@ -72,3 +72,35 @@ for (const route of seoToolRoutes) {
     }
   });
 }
+
+
+const directRouteCases = [
+  { path: '/discord-pfp-resizer/', title: /Discord PFP Resizer/i, mode: 'mode-discord-pfp-resizer' },
+  { path: '/resize-passport-photo/', title: /Passport Photo Resizer/i, mode: 'mode-resize-passport-photo' },
+  { path: '/heic-to-jpg/', title: /HEIC to JPG Converter/i, mode: 'mode-heic-to-jpg' },
+  { path: '/crop-image/', title: /Image Cropper|Crop Images Online/i, tab: 'crop' },
+  { path: '/instagram-resizer/', title: /Instagram Photo Resizer/i, tab: 'resize' },
+  { path: '/facebook-resizer/', title: /Facebook Image Resizer/i, tab: 'resize' },
+  { path: '/compress-image-to-10kb/', title: /Compress Image to 10KB/i, target: '10' },
+  { path: '/compress-image-to-100kb/', title: /Compress Image to 100KB/i, target: '100' },
+  { path: '/compress-image-to-200kb/', title: /Compress Image to 200KB/i, target: '200' }
+];
+
+for (const route of directRouteCases) {
+  test(`direct route ${route.path} selects its expected tool`, async ({ page }) => {
+    await page.goto(route.path);
+    await expect(page).toHaveURL(new RegExp(route.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'));
+    await expect(page).toHaveTitle(route.title);
+
+    if (route.mode) {
+      await expect(page.locator('body')).toHaveClass(new RegExp(route.mode));
+    }
+    if (route.tab) {
+      await expect(page.locator(`.tab-btn[data-tab="${route.tab}"]`)).toHaveClass(/active/);
+    }
+    if (route.target) {
+      await expect(page.locator('#tab-target')).toHaveClass(/active/);
+      await expect(page.locator(`#tab-target [data-target="${route.target}"]`)).toHaveClass(/active/);
+    }
+  });
+}
