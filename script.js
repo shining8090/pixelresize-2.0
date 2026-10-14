@@ -475,7 +475,8 @@ function handleInitialRoute() {
         const tool = path.replace('/', '');
         setTool(tool, params.get('open') === '1');
     } else if (path.includes('/tools/')) {
-        const tool = path.split('/tools/')[1];
+        // Remove the trailing slash so getToolUrl() recognizes the tool slug.
+        const tool = path.split('/tools/')[1].replace(/\/+$/, '');
         setTool(tool, params.get('open') === '1');
     } else if (path.includes('/compress-image-to-')) {
         const tool = path.replace('/', '');
