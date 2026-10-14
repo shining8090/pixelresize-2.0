@@ -7,6 +7,7 @@ on:
     paths:
       - 'script.js'
       - 'index.html'
+      - 'style.css'
       - 'tests/**'
       - 'playwright.config.cjs'
       - '.github/workflows/image-regression.yml'
@@ -26,6 +27,7 @@ on:
           - avif-convert
           - bmp-convert
           - privacy-errors
+          - mobile-layout
         default: all
 
 permissions:
@@ -98,3 +100,7 @@ jobs:
       - name: Run privacy and error-handling regression
         if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'privacy-errors'
         run: npx playwright test tests/privacy-errors.spec.cjs --reporter=line
+
+      - name: Run mobile layout regression
+        if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'mobile-layout'
+        run: npx playwright test tests/mobile-layout.spec.cjs --reporter=line
