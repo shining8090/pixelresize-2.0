@@ -56,7 +56,7 @@ const seoToolRoutes = [
   { slug: 'to-gif', title: /Convert Image to GIF|Convert JPG to GIF/i, tab: 'convert', format: 'image/gif' },
   { slug: 'bmp-to-png', title: /BMP to PNG Converter|Convert BMP to PNG/i, tab: 'convert', format: 'image/png' },
   { slug: 'gif-to-jpg', title: /GIF to JPG Converter|Convert GIF to JPG/i, tab: 'convert', format: 'image/jpeg' },
-  { slug: 'transform', title: /Transform Image Online/i, tab: 'transform' }
+  { slug: 'transform', title: /Online Image Transform Tool/i, tab: 'transform' }
 ];
 
 for (const route of seoToolRoutes) {
@@ -65,7 +65,7 @@ for (const route of seoToolRoutes) {
 
     await expect(page).toHaveURL(new RegExp(`/tools/${route.slug}/$`));
     await expect(page).toHaveTitle(route.title);
-    await expect(page.locator(`#tab-${route.tab}`)).toHaveClass(/active/);
+    await expect(page.locator(`.tab-btn[data-tab="${route.tab}"]`)).toHaveClass(/active/);
 
     if (route.format) {
       await expect(page.locator(`#tab-convert .btn-chip[data-format="${route.format}"]`)).toHaveClass(/active/);
