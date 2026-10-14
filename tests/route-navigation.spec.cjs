@@ -1,5 +1,10 @@
 const { test, expect } = require('@playwright/test');
 
+const fixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">
+  <rect width="320" height="240" fill="#174ea6"/>
+  <rect x="40" y="30" width="150" height="170" fill="#fbbc04"/>
+</svg>`;
+
 test('direct JPG-to-WebP route selects the Convert tab and WebP format', async ({ page }) => {
   await page.goto('/?tool=jpg-to-webp');
 
@@ -20,6 +25,14 @@ test('direct Discord preset opens the dedicated mode with 128x128 dimensions', a
   await page.goto('/?tool=discord-pfp-resizer');
 
   await expect(page.locator('body')).toHaveClass(/mode-discord-pfp-resizer/);
+
+  // The preset controls live inside the editor, which stays hidden until an image is selected.
+  await page.locator('#file-input').setInputFiles({
+    name: 'route-regression-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
   await expect(page.locator('#discord-controls')).toBeVisible();
   await expect(page.locator('#tab-resize')).toHaveClass(/active/);
   await expect(page.locator('#resize-w')).toHaveValue('128');
