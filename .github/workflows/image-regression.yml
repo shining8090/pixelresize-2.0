@@ -28,6 +28,7 @@ on:
           - bmp-convert
           - privacy-errors
           - mobile-layout
+          - route-navigation
         default: all
 
 permissions:
@@ -104,3 +105,7 @@ jobs:
       - name: Run mobile layout regression
         if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'mobile-layout'
         run: npx playwright test tests/mobile-layout.spec.cjs --reporter=line
+
+      - name: Run tool route and preset regression
+        if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'route-navigation'
+        run: npx playwright test tests/route-navigation.spec.cjs --reporter=line
