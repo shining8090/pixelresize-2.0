@@ -1693,7 +1693,7 @@ function setTool(tool, forceOpen = false) {
     } else if (tool === 'to_png' || tool === 'jpg-to-png' || tool === 'png') {
         targetTab = 'convert';
         format = 'image/png';
-    } else if (tool === 'to_jpg' || tool === 'gif_to_jpg' || tool === 'png_to_jpg' || tool === 'jpg' || tool === 'jpeg') {
+    } else if (tool === 'to_jpg' || tool === 'gif_to_jpg' || tool === 'gif-to-jpg' || tool === 'png_to_jpg' || tool === 'png-to-jpg' || tool === 'jpg' || tool === 'jpeg') {
         targetTab = 'convert';
         format = 'image/jpeg';
     } else if (tool === 'to_webp' || tool === 'jpg_to_webp' || tool === 'jpg-to-webp' || tool === 'webp') {
