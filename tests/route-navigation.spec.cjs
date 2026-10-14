@@ -76,7 +76,7 @@ for (const route of seoToolRoutes) {
 
 const directRouteCases = [
   { path: '/discord-pfp-resizer/', title: /Discord PFP Resizer/i, mode: 'mode-discord-pfp-resizer' },
-  { path: '/resize-passport-photo/', title: /Passport Photo Resizer/i, mode: 'mode-resize-passport-photo' },
+  { path: '/resize-passport-photo/', title: /Resize Passport Photo Online/i, mode: 'mode-resize-passport-photo' },
   { path: '/heic-to-jpg/', title: /HEIC to JPG Converter/i, mode: 'mode-heic-to-jpg' },
   { path: '/crop-image/', title: /Image Cropper|Crop Images Online/i, tab: 'crop' },
   { path: '/instagram-resizer/', title: /Instagram Photo Resizer/i, tab: 'resize' },
