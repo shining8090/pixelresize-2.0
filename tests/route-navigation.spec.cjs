@@ -92,6 +92,9 @@ for (const route of seoToolRoutes) {
     expect(typeof lang === 'string' && lang.trim().length > 0, 'html lang attribute should be present').toBe(true);
     expect(lang).toMatch(/^[a-z]{2,3}(?:-[A-Za-z0-9]+)*$/);
 
+    const title = await page.title();
+    expect(title.trim().length, 'document title should not be blank').toBeGreaterThan(0);
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
