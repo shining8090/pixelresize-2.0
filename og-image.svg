@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">PixelResize</title>
+  <desc id="desc">Private browser-based image resize, compress and convert tools.</desc>
+  <rect width="1200" height="630" fill="#f4f7fb"/>
+  <rect x="90" y="105" width="150" height="150" rx="32" fill="#647fbc"/>
+  <text x="165" y="207" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="112" font-weight="700" fill="#ffffff">P</text>
+  <text x="285" y="205" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="700" fill="#172b4d">PixelResize</text>
+  <text x="95" y="360" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="600" fill="#263b5a">Resize. Compress. Convert.</text>
+  <text x="95" y="430" font-family="Arial, Helvetica, sans-serif" font-size="32" fill="#52627a">Private image tools that work in your browser.</text>
+  <rect x="95" y="490" width="270" height="8" rx="4" fill="#647fbc"/>
+</svg>
