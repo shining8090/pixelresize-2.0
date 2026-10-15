@@ -33,4 +33,27 @@ test('AVIF conversion downloads a real AVIF file with the correct signature', as
   expect(bytes.length).toBeGreaterThan(20);
   expect(bytes.subarray(4, 8).toString('ascii')).toBe('ftyp');
   expect(bytes.subarray(8, 12).toString('ascii')).toMatch(/avif|avis/);
+
+  // Verify the downloaded AVIF can be decoded and still contains the fixture content.
+  const decoded = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/avif;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      yellow: Array.from(context.getImageData(100, 100, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+
+  expect(decoded.width).toBe(320);
+  expect(decoded.height).toBe(240);
+  expect(decoded.yellow[0]).toBeGreaterThan(180);
+  expect(decoded.yellow[1]).toBeGreaterThan(120);
+  expect(decoded.yellow[2]).toBeLessThan(120);
 });
