@@ -101,6 +101,10 @@ for (const route of seoToolRoutes) {
     expect(description.trim().length, 'meta description should not be blank').toBeGreaterThan(0);
     expect(description.trim().length, 'meta description should not be excessively long').toBeLessThanOrEqual(320);
 
+    const ogTitle = await page.locator('meta[property="og:title"]').getAttribute('content');
+    expect(typeof ogTitle === 'string' && ogTitle.trim().length > 0, 'Open Graph title should not be blank').toBe(true);
+    expect(ogTitle.trim().length, 'Open Graph title should not be excessively long').toBeLessThanOrEqual(100);
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
