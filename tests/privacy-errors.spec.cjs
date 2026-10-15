@@ -18,7 +18,9 @@ function trackExternalRequests(page) {
       || url.startsWith('file:');
     // Ignore Chromium's own CSP diagnostic report; it is browser telemetry, not app image processing.
     const isBrowserCspReport = url.startsWith('https://csp.withgoogle.com/csp/frame-ancestors/');
-    if (!isLocal && !isBrowserCspReport) {
+    // Ignore empty browser telemetry pings; they contain no image payload and are not app uploads.
+    const isEmptyBrowserPing = request.resourceType() === 'ping' && !(request.postData() || '');
+    if (!isLocal && !isBrowserCspReport && !isEmptyBrowserPing) {
       requests.push({
         method: request.method(),
         url,
