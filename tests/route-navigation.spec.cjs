@@ -70,6 +70,17 @@ for (const route of seoToolRoutes) {
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", expectedCanonical);
     await expect(page.locator('meta[property="og:url"]')).toHaveAttribute("content", expectedCanonical);
 
+    const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
+    const breadcrumbData = JSON.parse(breadcrumbJson);
+    expect(breadcrumbData['@type']).toBe('BreadcrumbList');
+    expect(breadcrumbData.itemListElement.length).toBeGreaterThanOrEqual(2);
+    expect(breadcrumbData.itemListElement[0].item).toBe('https://pixelresize.site/');
+
+    const faqJson = await page.locator('#schema-faq').textContent();
+    expect(JSON.parse(faqJson)['@type']).toBe('FAQPage');
+    const howToJson = await page.locator('#schema-howto').textContent();
+    expect(JSON.parse(howToJson)['@type']).toBe('HowTo');
+
     await expect(page.locator(`.tab-btn[data-tab="${route.tab}"]`)).toHaveClass(/active/);
 
     if (route.format) {
