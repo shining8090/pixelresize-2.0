@@ -127,6 +127,10 @@ for (const route of seoToolRoutes) {
 
     const ogType = await page.locator('meta[property="og:type"]').getAttribute('content');
     expect(ogType).toBe('website');
+
+    const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
+    expect(typeof ogImage === 'string' && ogImage.trim().length > 0, 'Open Graph image URL should be present').toBe(true);
+    expect(ogImage).toMatch(/^https:\/\//);
     const siteName = await page.locator('meta[property="og:site_name"]').getAttribute('content');
     expect(typeof siteName === 'string' && siteName.trim().length > 0, 'Open Graph site name should be present').toBe(true);
 
