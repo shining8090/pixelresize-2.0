@@ -37,6 +37,8 @@ function expectNoImagePayload(requests, label) {
     || request.postData.length > 0
     || request.url.includes(privacySentinel)
     || request.postData.includes(privacySentinel)
+    || Object.values(request.headers).some(value => value.includes(privacySentinel))
+    || request.url.includes('data:image/')
   );
   expect(unsafeRequests, label).toEqual([]);
 }
