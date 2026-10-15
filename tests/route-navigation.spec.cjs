@@ -95,6 +95,8 @@ for (const route of seoToolRoutes) {
     const title = await page.title();
     expect(title.trim().length, 'document title should not be blank').toBeGreaterThan(0);
 
+    expect(title.trim().length, 'document title should not be excessively long').toBeLessThanOrEqual(70);
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
