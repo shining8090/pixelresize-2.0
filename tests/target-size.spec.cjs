@@ -49,5 +49,28 @@ for (const targetKB of [10, 50, 100, 200]) {
     expect(output[1]).toBe(0xd8);
     expect(output[2]).toBe(0xff);
     expect(output.length).toBeLessThanOrEqual(targetKB * 1024);
+
+    // Confirm the saved file actually decodes and keeps the expected dimensions.
+    const decoded = await page.evaluate(async base64 => {
+      const image = new Image();
+      image.src = `data:image/jpeg;base64,${base64}`;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(image, 0, 0);
+      return {
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+        center: Array.from(context.getImageData(600, 400, 1, 1).data)
+      };
+    }, output.toString('base64'));
+
+    expect(decoded.width).toBe(1200);
+    expect(decoded.height).toBe(800);
+    expect(decoded.center[0]).toBeGreaterThan(180);
+    expect(decoded.center[1]).toBeGreaterThan(160);
+    expect(decoded.center[2]).toBeGreaterThan(120);
   });
 }
