@@ -76,6 +76,10 @@ for (const route of seoToolRoutes) {
       expect(typeof content === 'string' && content.trim().length > 0, `${selector} should have non-empty content`).toBe(true);
     }
 
+    const robots = await page.locator('meta[name="robots"]').getAttribute('content');
+    expect(typeof robots === 'string' && robots.trim().length > 0, 'robots meta tag should have non-empty content').toBe(true);
+    expect(robots.toLowerCase()).not.toContain('noindex');
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
