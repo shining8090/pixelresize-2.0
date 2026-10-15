@@ -97,6 +97,9 @@ for (const route of directRouteCases) {
     await expect(page).toHaveURL(new RegExp(route.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'));
     await expect(page).toHaveTitle(route.title);
 
+    const expectedCanonical = "https://pixelresize.site" + route.path;
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", expectedCanonical);
+
     if (route.mode) {
       await expect(page.locator('body')).toHaveClass(new RegExp(route.mode));
     }
