@@ -113,6 +113,13 @@ for (const route of seoToolRoutes) {
     expect(canonicalUrl).toMatch(/^https:\/\/pixelresize\.site\//);
     expect(canonicalUrl).not.toMatch(/[?#]/);
 
+    const twitterCard = await page.locator('meta[name="twitter:card"]').getAttribute('content');
+    expect(twitterCard).toBe('summary_large_image');
+    for (const selector of ['meta[name="twitter:title"]', 'meta[name="twitter:description"]']) {
+      const content = await page.locator(selector).getAttribute('content');
+      expect(typeof content === 'string' && content.trim().length > 0, `${selector} should have non-empty content`).toBe(true);
+    }
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
