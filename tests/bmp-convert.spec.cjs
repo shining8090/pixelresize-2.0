@@ -7,7 +7,7 @@ const fixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="
   <circle cx="230" cy="120" r="60" fill="#ea4335"/>
 </svg>`;
 
-test('BMP conversion downloads a valid 24-bit BMP file', async ({ page }) => {
+test('BMP conversion downloads a valid 24-bit BMP file and preserves image content', async ({ page }) => {
   await page.goto('/');
   await page.locator('#file-input').setInputFiles({
     name: 'bmp-conversion-fixture.svg',
@@ -37,4 +37,27 @@ test('BMP conversion downloads a valid 24-bit BMP file', async ({ page }) => {
   expect(bytes.readInt32LE(18)).toBe(320);
   expect(bytes.readInt32LE(22)).toBe(240);
   expect(bytes.readUInt16LE(28)).toBe(24);
+
+  // A valid BMP header alone does not prove the downloaded pixels are usable.
+  const decoded = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/bmp;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      yellow: Array.from(context.getImageData(100, 100, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+
+  expect(decoded.width).toBe(320);
+  expect(decoded.height).toBe(240);
+  expect(decoded.yellow[0]).toBeGreaterThan(150);
+  expect(decoded.yellow[1]).toBeGreaterThan(100);
+  expect(decoded.yellow[2]).toBeLessThan(140);
 });
