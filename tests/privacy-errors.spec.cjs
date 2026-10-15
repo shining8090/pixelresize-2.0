@@ -1,21 +1,46 @@
 const { test, expect } = require('@playwright/test');
 
+const privacySentinel = 'PIXELRESIZE_PRIVACY_SENTINEL_20261015';
 const fixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">
+  <!-- ${privacySentinel} -->
   <rect width="320" height="240" fill="#174ea6"/>
   <rect x="40" y="30" width="150" height="170" fill="#fbbc04"/>
 </svg>`;
 
-test('image processing does not upload image data to a remote host', async ({ page }) => {
-  const remoteRequests = [];
+function trackExternalRequests(page) {
+  const requests = [];
   page.on('request', request => {
     const url = request.url();
-    // Chromium may send a browser-generated CSP diagnostic report to Google.
-    // This report contains security-policy diagnostics, not the image being processed.
+    const isLocal = url.startsWith('http://127.0.0.1:8000')
+      || url.startsWith('http://localhost:8000')
+      || url.startsWith('data:')
+      || url.startsWith('blob:')
+      || url.startsWith('file:');
+    // Ignore Chromium's own CSP diagnostic report; it is browser telemetry, not app image processing.
     const isBrowserCspReport = url.startsWith('https://csp.withgoogle.com/csp/frame-ancestors/');
-    if (!url.startsWith('http://127.0.0.1:8000') && !url.startsWith('http://localhost:8000') && !url.startsWith('data:') && !url.startsWith('blob:') && !url.startsWith('file:') && !isBrowserCspReport) {
-      if (['POST', 'PUT', 'PATCH'].includes(request.method())) remoteRequests.push({ method: request.method(), url });
+    if (!isLocal && !isBrowserCspReport) {
+      requests.push({
+        method: request.method(),
+        url,
+        postData: request.postData() || ''
+      });
     }
   });
+  return requests;
+}
+
+function expectNoImagePayload(requests, label) {
+  const unsafeRequests = requests.filter(request =>
+    !['GET', 'HEAD', 'OPTIONS'].includes(request.method)
+    || request.postData.length > 0
+    || request.url.includes(privacySentinel)
+    || request.postData.includes(privacySentinel)
+  );
+  expect(unsafeRequests, label).toEqual([]);
+}
+
+test('image processing does not send image payloads to remote hosts', async ({ page }) => {
+  const remoteRequests = trackExternalRequests(page);
 
   await page.goto('/');
   await page.locator('#file-input').setInputFiles({
@@ -31,7 +56,29 @@ test('image processing does not upload image data to a remote host', async ({ pa
   await page.locator('#apply-btn').click();
   await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
 
-  expect(remoteRequests, 'Image workflow should not send upload-style requests to remote hosts').toEqual([]);
+  expectNoImagePayload(remoteRequests, 'Image workflow must not send request bodies or image sentinel data to remote hosts');
+});
+
+test('AVIF processing loads its encoder without sending image payloads remotely', async ({ page }) => {
+  const remoteRequests = trackExternalRequests(page);
+
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'privacy-regression-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await expect(page.locator('#main-preview')).toHaveJSProperty('complete', true);
+
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/avif"]').click();
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  expectNoImagePayload(remoteRequests, 'AVIF processing may download encoder code, but must not send image payloads remotely');
+  expect(remoteRequests.some(request => request.method === 'GET' && request.url.includes('code4fukui.github.io/AVIF/AVIF.js')),
+    'AVIF encoder should be fetched as code only').toBe(true);
 });
 
 test('clicking download before processing does not download an empty file', async ({ page }) => {
