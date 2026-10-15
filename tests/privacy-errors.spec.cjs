@@ -22,7 +22,9 @@ function trackExternalRequests(page) {
       requests.push({
         method: request.method(),
         url,
-        postData: request.postData() || ''
+        postData: request.postData() || '',
+        resourceType: request.resourceType(),
+        headers: request.headers()
       });
     }
   });
