@@ -1,5 +1,27 @@
 const { test, expect } = require('@playwright/test');
 
+const fixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">
+  <rect width="320" height="240" fill="#174ea6"/>
+  <rect x="40" y="30" width="150" height="170" fill="#fbbc04"/>
+</svg>`;
+
+async function expectNoHorizontalOverflow(page, label) {
+  const dimensions = await page.evaluate(() => ({
+    viewportWidth: document.documentElement.clientWidth,
+    documentWidth: document.documentElement.scrollWidth,
+    bodyWidth: document.body.scrollWidth
+  }));
+
+  expect(
+    dimensions.documentWidth,
+    `${label}: document overflows horizontally: ${JSON.stringify(dimensions)}`
+  ).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
+  expect(
+    dimensions.bodyWidth,
+    `${label}: body overflows horizontally: ${JSON.stringify(dimensions)}`
+  ).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
+}
+
 const viewports = [
   { name: 'small mobile 320px', width: 320, height: 740 },
   { name: 'mobile 375px', width: 375, height: 812 },
@@ -15,20 +37,17 @@ for (const viewport of viewports) {
     await page.goto('/');
     await expect(page.locator('main')).toBeVisible();
 
-    const dimensions = await page.evaluate(() => ({
-      viewportWidth: document.documentElement.clientWidth,
-      documentWidth: document.documentElement.scrollWidth,
-      bodyWidth: document.body.scrollWidth
-    }));
+    await expectNoHorizontalOverflow(page, 'Landing page');
 
-    expect(
-      dimensions.documentWidth,
-      `Document overflows horizontally: ${JSON.stringify(dimensions)}`
-    ).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
-    expect(
-      dimensions.bodyWidth,
-      `Body overflows horizontally: ${JSON.stringify(dimensions)}`
-    ).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
+    // Also test the editor state: a page can fit before upload but overflow
+    // when tool controls and the image preview become visible.
+    await page.locator('#file-input').setInputFiles({
+      name: 'mobile-layout-fixture.svg',
+      mimeType: 'image/svg+xml',
+      buffer: Buffer.from(fixtureSvg)
+    });
+    await expect(page.locator('#processing-ui')).toBeVisible();
+    await expectNoHorizontalOverflow(page, 'Image editor');
   });
 }
 
