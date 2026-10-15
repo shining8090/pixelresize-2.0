@@ -75,6 +75,13 @@ for (const route of seoToolRoutes) {
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
     expect(breadcrumbData.itemListElement.length).toBeGreaterThanOrEqual(2);
     expect(breadcrumbData.itemListElement[0].item).toBe('https://pixelresize.site/');
+    expect(breadcrumbData.itemListElement.every(item => item['@type'] === 'ListItem'
+      && Number.isInteger(item.position) && item.position > 0
+      && typeof item.name === 'string' && item.name.length > 0
+      && typeof item.item === 'string' && item.item.startsWith('https://pixelresize.site/'))).toBe(true);
+    expect(breadcrumbData.itemListElement.map(item => item.position)).toEqual(
+      breadcrumbData.itemListElement.map((_, index) => index + 1)
+    );
 
     const faqJson = await page.locator('#schema-faq').textContent();
     const faqData = JSON.parse(faqJson);
