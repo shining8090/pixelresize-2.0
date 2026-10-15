@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const fs = require('fs');
 
 const fixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">
   <rect x="0" y="0" width="160" height="240" fill="#ff0000"/>
@@ -45,6 +46,34 @@ test('horizontal flip reverses left and right image content', async ({ page }) =
   expect(left[0]).toBeLessThan(40);
   expect(right[0]).toBeGreaterThan(200);
   expect(right[2]).toBeLessThan(40);
+
+  // Confirm the downloaded output, not only the on-screen preview, contains the flip.
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-btn').click();
+  const download = await downloadPromise;
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = fs.readFileSync(filePath);
+  const downloaded = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/octet-stream;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      left: Array.from(ctx.getImageData(40, 120, 1, 1).data),
+      right: Array.from(ctx.getImageData(280, 120, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+  expect(downloaded.width).toBe(320);
+  expect(downloaded.height).toBe(240);
+  expect(downloaded.left[2]).toBeGreaterThan(200);
+  expect(downloaded.right[0]).toBeGreaterThan(200);
 });
 
 test('90-degree rotation swaps the output width and height', async ({ page }) => {
@@ -56,4 +85,20 @@ test('90-degree rotation swaps the output width and height', async ({ page }) =>
   const preview = page.locator('#main-preview');
   await expect.poll(async () => preview.evaluate(img => img.naturalWidth)).toBe(240);
   await expect.poll(async () => preview.evaluate(img => img.naturalHeight)).toBe(320);
+
+  // Verify the saved file also decodes with the rotated dimensions.
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-btn').click();
+  const download = await downloadPromise;
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = fs.readFileSync(filePath);
+  const downloaded = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/octet-stream;base64,${base64}`;
+    await image.decode();
+    return { width: image.naturalWidth, height: image.naturalHeight };
+  }, bytes.toString('base64'));
+  expect(downloaded.width).toBe(240);
+  expect(downloaded.height).toBe(320);
 });
