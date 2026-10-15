@@ -88,6 +88,9 @@ for (const route of seoToolRoutes) {
     expect(typeof charset === 'string' && charset.trim().length > 0, 'document charset should be declared').toBe(true);
     expect(charset.toLowerCase()).toBe('utf-8');
 
+    const lang = await page.locator('html').getAttribute('lang');
+    expect(typeof lang === 'string' && lang.trim().length > 0, 'html lang attribute should be present').toBe(true);
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
