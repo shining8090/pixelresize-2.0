@@ -39,5 +39,29 @@ for (const format of formats) {
     const bytes = fs.readFileSync(filePath);
     expect(bytes.length).toBeGreaterThan(20);
     expect(format.signature(bytes)).toBe(true);
+
+    // A correct file signature alone does not prove the downloaded image decodes
+    // or preserves the expected dimensions and visible source content.
+    const decoded = await page.evaluate(async base64 => {
+      const image = new Image();
+      image.src = `data:image/octet-stream;base64,${base64}`;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(image, 0, 0);
+      return {
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+        yellow: Array.from(context.getImageData(100, 100, 1, 1).data)
+      };
+    }, bytes.toString('base64'));
+
+    expect(decoded.width).toBe(320);
+    expect(decoded.height).toBe(240);
+    expect(decoded.yellow[0]).toBeGreaterThan(180);
+    expect(decoded.yellow[1]).toBeGreaterThan(120);
+    expect(decoded.yellow[2]).toBeLessThan(120);
   });
 }
