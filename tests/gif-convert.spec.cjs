@@ -32,4 +32,27 @@ test('GIF conversion downloads a real GIF file with the correct signature', asyn
   const bytes = fs.readFileSync(filePath);
   expect(bytes.length).toBeGreaterThan(20);
   expect(bytes.subarray(0, 6).toString('ascii')).toMatch(/^GIF8[79]a$/);
+
+  // Validate that the output decodes and retains the expected dimensions/content.
+  const decoded = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/gif;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      yellow: Array.from(context.getImageData(100, 100, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+
+  expect(decoded.width).toBe(320);
+  expect(decoded.height).toBe(240);
+  expect(decoded.yellow[0]).toBeGreaterThan(150);
+  expect(decoded.yellow[1]).toBeGreaterThan(100);
+  expect(decoded.yellow[2]).toBeLessThan(140);
 });
