@@ -90,6 +90,7 @@ for (const route of seoToolRoutes) {
 
     const lang = await page.locator('html').getAttribute('lang');
     expect(typeof lang === 'string' && lang.trim().length > 0, 'html lang attribute should be present').toBe(true);
+    expect(lang).toMatch(/^[a-z]{2,3}(?:-[A-Za-z0-9]+)*$/);
 
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
