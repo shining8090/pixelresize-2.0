@@ -43,6 +43,11 @@ for (const targetKB of [10, 50, 100, 200]) {
     const filePath = await download.path();
     expect(filePath).toBeTruthy();
     const fs = require('fs');
-    expect(fs.statSync(filePath).size).toBeLessThanOrEqual(targetKB * 1024);
+    const output = fs.readFileSync(filePath);
+    expect(output.length).toBeGreaterThan(3);
+    expect(output[0]).toBe(0xff);
+    expect(output[1]).toBe(0xd8);
+    expect(output[2]).toBe(0xff);
+    expect(output.length).toBeLessThanOrEqual(targetKB * 1024);
   });
 }
