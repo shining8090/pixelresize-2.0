@@ -125,6 +125,11 @@ for (const route of seoToolRoutes) {
     const twitterDescription = await page.locator('meta[name="twitter:description"]').getAttribute('content');
     expect(twitterDescription.trim().length).toBeLessThanOrEqual(320);
 
+    const ogType = await page.locator('meta[property="og:type"]').getAttribute('content');
+    expect(ogType).toBe('website');
+    const siteName = await page.locator('meta[property="og:site_name"]').getAttribute('content');
+    expect(typeof siteName === 'string' && siteName.trim().length > 0, 'Open Graph site name should be present').toBe(true);
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
