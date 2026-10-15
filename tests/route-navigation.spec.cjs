@@ -84,6 +84,10 @@ for (const route of seoToolRoutes) {
     expect(typeof viewport === 'string' && viewport.trim().length > 0, 'viewport meta tag should have non-empty content').toBe(true);
     expect(viewport).toMatch(/width\s*=\s*device-width/i);
 
+    const charset = await page.locator('meta[charset]').getAttribute('charset');
+    expect(typeof charset === 'string' && charset.trim().length > 0, 'document charset should be declared').toBe(true);
+    expect(charset.toLowerCase()).toBe('utf-8');
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
