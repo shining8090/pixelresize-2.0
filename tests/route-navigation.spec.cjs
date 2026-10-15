@@ -77,9 +77,21 @@ for (const route of seoToolRoutes) {
     expect(breadcrumbData.itemListElement[0].item).toBe('https://pixelresize.site/');
 
     const faqJson = await page.locator('#schema-faq').textContent();
-    expect(JSON.parse(faqJson)['@type']).toBe('FAQPage');
+    const faqData = JSON.parse(faqJson);
+    expect(faqData['@type']).toBe('FAQPage');
+    expect(faqData.mainEntity.length).toBeGreaterThan(0);
+    expect(faqData.mainEntity.every(item => item['@type'] === 'Question'
+      && typeof item.name === 'string' && item.name.length > 0
+      && item.acceptedAnswer && item.acceptedAnswer['@type'] === 'Answer'
+      && typeof item.acceptedAnswer.text === 'string' && item.acceptedAnswer.text.length > 0)).toBe(true);
+
     const howToJson = await page.locator('#schema-howto').textContent();
-    expect(JSON.parse(howToJson)['@type']).toBe('HowTo');
+    const howToData = JSON.parse(howToJson);
+    expect(howToData['@type']).toBe('HowTo');
+    expect(howToData.step.length).toBe(4);
+    expect(howToData.step.every(step => step['@type'] === 'HowToStep'
+      && typeof step.name === 'string' && step.name.length > 0
+      && typeof step.text === 'string' && step.text.length > 0)).toBe(true);
 
     await expect(page.locator(`.tab-btn[data-tab="${route.tab}"]`)).toHaveClass(/active/);
 
