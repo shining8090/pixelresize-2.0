@@ -130,6 +130,8 @@ for (const route of seoToolRoutes) {
     const siteName = await page.locator('meta[property="og:site_name"]').getAttribute('content');
     expect(typeof siteName === 'string' && siteName.trim().length > 0, 'Open Graph site name should be present').toBe(true);
 
+    expect(siteName.trim()).toBe('PixelResize');
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
