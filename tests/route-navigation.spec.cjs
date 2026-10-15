@@ -120,6 +120,11 @@ for (const route of seoToolRoutes) {
       expect(typeof content === 'string' && content.trim().length > 0, `${selector} should have non-empty content`).toBe(true);
     }
 
+    const twitterTitle = await page.locator('meta[name="twitter:title"]').getAttribute('content');
+    expect(twitterTitle.trim().length).toBeLessThanOrEqual(100);
+    const twitterDescription = await page.locator('meta[name="twitter:description"]').getAttribute('content');
+    expect(twitterDescription.trim().length).toBeLessThanOrEqual(320);
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
