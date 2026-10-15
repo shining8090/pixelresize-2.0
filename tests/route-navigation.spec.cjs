@@ -109,6 +109,10 @@ for (const route of seoToolRoutes) {
     expect(typeof ogDescription === 'string' && ogDescription.trim().length > 0, 'Open Graph description should not be blank').toBe(true);
     expect(ogDescription.trim().length, 'Open Graph description should not be excessively long').toBeLessThanOrEqual(320);
 
+    const canonicalUrl = await page.locator('link[rel="canonical"]').getAttribute('href');
+    expect(canonicalUrl).toMatch(/^https:\/\/pixelresize\.site\//);
+    expect(canonicalUrl).not.toMatch(/[?#]/);
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
