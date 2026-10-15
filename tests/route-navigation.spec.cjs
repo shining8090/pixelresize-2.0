@@ -70,6 +70,12 @@ for (const route of seoToolRoutes) {
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", expectedCanonical);
     await expect(page.locator('meta[property="og:url"]')).toHaveAttribute("content", expectedCanonical);
 
+    // SEO routes should expose non-empty search and social metadata.
+    for (const selector of ['meta[name="description"]', 'meta[property="og:title"]', 'meta[property="og:description"]']) {
+      const content = await page.locator(selector).getAttribute('content');
+      expect(typeof content === 'string' && content.trim().length > 0, `${selector} should have non-empty content`).toBe(true);
+    }
+
     const breadcrumbJson = await page.locator('#schema-breadcrumb').textContent();
     const breadcrumbData = JSON.parse(breadcrumbJson);
     expect(breadcrumbData['@type']).toBe('BreadcrumbList');
