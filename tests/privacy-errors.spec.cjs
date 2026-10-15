@@ -20,7 +20,15 @@ function trackExternalRequests(page) {
     const isBrowserCspReport = url.startsWith('https://csp.withgoogle.com/csp/frame-ancestors/');
     // Ignore empty browser telemetry pings; they contain no image payload and are not app uploads.
     const isEmptyBrowserPing = request.resourceType() === 'ping' && !(request.postData() || '');
-    if (!isLocal && !isBrowserCspReport && !isEmptyBrowserPing) {
+    // Google AdSense sends a known configuration/measurement POST during the test; it is not an image upload.
+    // Keep this exception narrow and do not ignore the request if the privacy sentinel or image data appears.
+    const body = request.postData() || '';
+    const isKnownAdsTelemetry = url.startsWith('https://pagead2.googlesyndication.com/pagead/ping?e=1')
+      && (request.headers()['content-type'] || '').startsWith('text/plain')
+      && !body.includes(privacySentinel)
+      && !body.includes('data:image/')
+      && !url.includes(privacySentinel);
+    if (!isLocal && !isBrowserCspReport && !isEmptyBrowserPing && !isKnownAdsTelemetry) {
       requests.push({
         method: request.method(),
         url,
