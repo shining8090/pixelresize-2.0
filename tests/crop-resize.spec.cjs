@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const fs = require('fs');
 
 const fixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
   <defs>
@@ -50,4 +51,35 @@ test('1:1 crop followed by explicit 256x256 resize preserves dimensions and cent
   expect(center[0]).toBeGreaterThan(220);
   expect(center[1]).toBeGreaterThan(200);
   expect(center[2]).toBeGreaterThan(150);
+
+  // Validate the saved output too, so a correct preview cannot hide a bad download.
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-btn').click();
+  const download = await downloadPromise;
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = fs.readFileSync(filePath);
+  expect(bytes.length).toBeGreaterThan(20);
+
+  const downloaded = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/octet-stream;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      center: Array.from(ctx.getImageData(128, 128, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+
+  expect(downloaded.width).toBe(256);
+  expect(downloaded.height).toBe(256);
+  expect(downloaded.center[0]).toBeGreaterThan(220);
+  expect(downloaded.center[1]).toBeGreaterThan(200);
+  expect(downloaded.center[2]).toBeGreaterThan(150);
 });
