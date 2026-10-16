@@ -89,11 +89,13 @@ test('unreachable target size reports failure and does not offer a download', as
     };
   });
 
-  const dialogPromise = page.waitForEvent('dialog');
+  let dialogMessage = '';
+  page.once('dialog', async dialog => {
+    dialogMessage = dialog.message();
+    await dialog.accept();
+  });
   await page.locator('#apply-btn').click();
-  const dialog = await dialogPromise;
-  expect(dialog.message()).toMatch(/Could not reach the selected 10 KB limit/i);
-  await dialog.accept();
+  expect(dialogMessage).toMatch(/Could not reach the selected 10 KB limit/i);
 
   await expect(page.locator('#apply-btn')).toHaveText('Apply Changes');
   let downloaded = false;
