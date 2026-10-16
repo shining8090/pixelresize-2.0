@@ -5,6 +5,19 @@ const fixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="
   <rect x="40" y="30" width="150" height="170" fill="#fbbc04"/>
 </svg>`;
 
+test('homepage exposes working social preview metadata', async ({ page }) => {
+  await page.goto('/');
+
+  const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
+  const twitterImage = await page.locator('meta[name="twitter:image"]').getAttribute('content');
+  expect(ogImage).toBe('https://pixelresize.site/og-image.svg');
+  expect(twitterImage).toBe(ogImage);
+
+  const response = await page.request.get('/og-image.svg');
+  expect(response.ok(), 'homepage social preview asset should be served successfully').toBe(true);
+  expect(response.headers()['content-type']).toMatch(/image\\/svg\\+xml/i);
+});
+
 test('direct JPG-to-WebP route selects the Convert tab and WebP format', async ({ page }) => {
   await page.goto('/?tool=jpg-to-webp');
 
