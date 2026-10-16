@@ -74,3 +74,31 @@ for (const targetKB of [10, 50, 100, 200]) {
     expect(decoded.center[2]).toBeGreaterThan(120);
   });
 }
+
+test('unreachable target size reports failure and does not offer a download', async ({ page }) => {
+  await loadFixture(page);
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/jpeg"]').click();
+  await page.locator('.tab-btn[data-tab="target"]').click();
+  await page.locator('#tab-target [data-target="10"]').click();
+
+  // Simulate an encoder that cannot produce an output under the requested limit.
+  await page.evaluate(() => {
+    HTMLCanvasElement.prototype.toBlob = function (callback, type) {
+      callback(new Blob([new Uint8Array(12 * 1024)], { type: type || 'image/jpeg' }));
+    };
+  });
+
+  const dialogPromise = page.waitForEvent('dialog');
+  await page.locator('#apply-btn').click();
+  const dialog = await dialogPromise;
+  expect(dialog.message()).toMatch(/Could not reach the selected 10 KB limit/i);
+  await dialog.accept();
+
+  await expect(page.locator('#apply-btn')).toHaveText('Apply Changes');
+  let downloaded = false;
+  page.once('download', () => { downloaded = true; });
+  await page.locator('#download-btn').click();
+  await page.waitForTimeout(200);
+  expect(downloaded, 'an over-limit output must not be downloadable as a successful result').toBe(false);
+});
