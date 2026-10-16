@@ -134,6 +134,11 @@ for (const route of seoToolRoutes) {
     const twitterImage = await page.locator('meta[name="twitter:image"]').getAttribute('content');
     expect(typeof twitterImage === 'string' && twitterImage.trim().length > 0, 'Twitter image URL should be present').toBe(true);
     expect(twitterImage).toMatch(/^https:\/\//);
+    expect(ogImage).toBe('https://pixelresize.site/og-image.svg');
+    expect(twitterImage).toBe(ogImage);
+    const socialImageResponse = await page.request.get('/og-image.svg');
+    expect(socialImageResponse.ok(), 'social preview image asset should be served successfully').toBe(true);
+    expect(socialImageResponse.headers()['content-type']).toMatch(/image\/svg\+xml/i);
 
     const siteName = await page.locator('meta[property="og:site_name"]').getAttribute('content');
     expect(typeof siteName === 'string' && siteName.trim().length > 0, 'Open Graph site name should be present').toBe(true);
