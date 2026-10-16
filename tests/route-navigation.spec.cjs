@@ -15,7 +15,7 @@ test('homepage exposes working social preview metadata', async ({ page }) => {
 
   const response = await page.request.get('/og-image.svg');
   expect(response.ok(), 'homepage social preview asset should be served successfully').toBe(true);
-  expect(response.headers()['content-type']).toMatch(/image\\/svg\\+xml/i);
+  expect(response.headers()['content-type']).toContain('image/svg+xml');
 });
 
 test('direct JPG-to-WebP route selects the Convert tab and WebP format', async ({ page }) => {
