@@ -1432,16 +1432,15 @@ async function applyChanges() {
             throw new Error('Image compression failed.');
         }
 
-        processedBlob = targetResult.blob;
-
         if (!targetResult.fitsTarget) {
-            console.warn('PixelResize could not reach the requested target size.', {
-                targetBytes,
-                actualBytes: processedBlob.size,
-                width: targetResult.width,
-                height: targetResult.height
-            });
+            // Do not report success or enable download when the requested size limit was not met.
+            processedBlob = null;
+            applyBtn.textContent = 'Apply Changes';
+            alert(`Could not reach the selected ${selectedTargetKB} KB limit. The smallest result was ${formatBytes(targetResult.blob.size)}. Try a larger target size.`);
+            return;
         }
+
+        processedBlob = targetResult.blob;
     } else if (activeTab === 'compress' && supportsQuality) {
         let currentQuality = Math.min(0.95, quality);
         let blob = await canvasToBlob(canvas, format, currentQuality);
