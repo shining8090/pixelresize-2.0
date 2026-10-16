@@ -131,6 +131,10 @@ for (const route of seoToolRoutes) {
     const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
     expect(typeof ogImage === 'string' && ogImage.trim().length > 0, 'Open Graph image URL should be present').toBe(true);
     expect(ogImage).toMatch(/^https:\/\//);
+    const twitterImage = await page.locator('meta[name="twitter:image"]').getAttribute('content');
+    expect(typeof twitterImage === 'string' && twitterImage.trim().length > 0, 'Twitter image URL should be present').toBe(true);
+    expect(twitterImage).toMatch(/^https:\/\//);
+
     const siteName = await page.locator('meta[property="og:site_name"]').getAttribute('content');
     expect(typeof siteName === 'string' && siteName.trim().length > 0, 'Open Graph site name should be present').toBe(true);
 
