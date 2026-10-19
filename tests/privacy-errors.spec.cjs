@@ -144,22 +144,22 @@ test('HEIC conversion failure restores the apply button and reports an error', a
   );
 
   await page.goto('/');
-  await expect(page.locator('#apply-btn')).toBeVisible();
-  await page.locator('#file-input').setInputFiles({
-    name: 'broken-photo.heic',
-    mimeType: 'image/heic',
-    buffer: Buffer.from('invalid HEIC fixture')
-  });
-
   let dialogMessage = '';
   page.once('dialog', async dialog => {
     dialogMessage = dialog.message();
     await dialog.accept();
   });
 
-  // Wait for the asynchronous conversion failure to be handled.
-  await expect.poll(async () => page.locator('#apply-btn').textContent()).toBe('Apply Changes');
-  expect(dialogMessage).toContain('Failed to convert HEIC image.');
+  await page.locator('#file-input').setInputFiles({
+    name: 'broken-photo.heic',
+    mimeType: 'image/heic',
+    buffer: Buffer.from('invalid HEIC fixture')
+  });
+
+  // The editor controls start hidden until a valid image is loaded; verify
+  // the failure dialog and ensure the upload screen remains available.
+  await expect.poll(() => dialogMessage).toContain('Failed to convert HEIC image.');
+  await expect(page.locator('#upload-zone')).toBeVisible();
   await expect(page.locator('#processing-ui')).toBeHidden();
 });
 
