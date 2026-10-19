@@ -757,7 +757,10 @@ async function handleFiles(files) {
         }
     }
 
-    if (!file.type.startsWith('image/')) return;
+    if (!file.type.startsWith('image/')) {
+        alert('Unsupported file type. Please choose an image file.');
+        return;
+    }
 
     markUnsaved();
 
