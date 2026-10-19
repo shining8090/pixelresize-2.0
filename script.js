@@ -768,6 +768,19 @@ async function handleFiles(files) {
     processedBlob = null;
     originalFile = file;
     const reader = new FileReader();
+    const rejectUnreadableImage = () => {
+        // Clear partially initialized state so a corrupt file cannot leave the
+        // editor pointing at stale image data or enable a misleading download.
+        currentImage = null;
+        originalFile = null;
+        processedBlob = null;
+        processedDataUrl = null;
+        mainPreview.removeAttribute('src');
+        cropPreviewImg.removeAttribute('src');
+        processingUI.classList.add('hidden');
+        uploadZone.classList.remove('hidden');
+        alert('Could not open this image. The file may be damaged or unsupported. Please choose another image.');
+    };
     reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
@@ -778,7 +791,7 @@ async function handleFiles(files) {
             mainPreview.src = e.target.result;
             cropPreviewImg.src = e.target.result;
             processedDataUrl = e.target.result;
-            
+
             // Set initial inputs
             resizeW.value = img.width;
             resizeH.value = img.height;
@@ -792,13 +805,15 @@ async function handleFiles(files) {
 
             infoOrig.textContent = formatBytes(file.size);
             updateInfo();
-            
+
             uploadZone.classList.add('hidden');
             processingUI.classList.remove('hidden');
             processingUI.scrollIntoView({ behavior: 'smooth' });
         };
+        img.onerror = rejectUnreadableImage;
         img.src = e.target.result;
     };
+    reader.onerror = rejectUnreadableImage;
     reader.readAsDataURL(file);
 }
 
