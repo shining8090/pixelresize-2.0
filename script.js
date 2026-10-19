@@ -739,13 +739,19 @@ async function handleFiles(files) {
                 quality: 0.9
             });
             
-            // heic2any can return an array or a single blob
+            // heic2any can return an array or a single blob. Reject empty
+            // results rather than creating a misleading empty JPEG file.
             const resultBlob = Array.isArray(blob) ? blob[0] : blob;
+            if (!(resultBlob instanceof Blob) || resultBlob.size === 0) {
+                throw new Error('HEIC encoder returned an empty result.');
+            }
             file = new File([resultBlob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
-            
+
             if (applyBtn) applyBtn.textContent = 'Apply Changes';
         } catch (err) {
             console.error('HEIC conversion failed:', err);
+            const applyBtn = document.getElementById('apply-btn');
+            if (applyBtn) applyBtn.textContent = 'Apply Changes';
             alert('Failed to convert HEIC image. Please try a different format.');
             return;
         }
