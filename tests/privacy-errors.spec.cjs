@@ -134,6 +134,35 @@ test('clicking download before processing does not download an empty file', asyn
   expect(downloadCount).toBe(0);
 });
 
+test('HEIC conversion failure restores the apply button and reports an error', async ({ page }) => {
+  await page.route('https://cdn.jsdelivr.net/npm/heic2any@0.0.3/dist/heic2any.min.js', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: 'window.heic2any = async () => { throw new Error("simulated HEIC conversion failure"); };'
+    })
+  );
+
+  await page.goto('/');
+  await expect(page.locator('#apply-btn')).toBeVisible();
+  await page.locator('#file-input').setInputFiles({
+    name: 'broken-photo.heic',
+    mimeType: 'image/heic',
+    buffer: Buffer.from('invalid HEIC fixture')
+  });
+
+  let dialogMessage = '';
+  page.once('dialog', async dialog => {
+    dialogMessage = dialog.message();
+    await dialog.accept();
+  });
+
+  // Wait for the asynchronous conversion failure to be handled.
+  await expect.poll(async () => page.locator('#apply-btn').textContent()).toBe('Apply Changes');
+  expect(dialogMessage).toContain('Failed to convert HEIC image.');
+  await expect(page.locator('#processing-ui')).toBeHidden();
+});
+
 test('unsupported files are rejected and the editor remains unopened', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
