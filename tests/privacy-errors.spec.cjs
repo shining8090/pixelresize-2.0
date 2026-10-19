@@ -95,6 +95,34 @@ test('AVIF processing loads its encoder without sending image payloads remotely'
     'AVIF encoder should be fetched as code only').toBe(true);
 });
 
+test('AVIF encoder load failure restores the apply button and reports an error', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.route('https://code4fukui.github.io/AVIF/AVIF.js', route => route.abort());
+
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'privacy-regression-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await expect(page.locator('#main-preview')).toHaveJSProperty('complete', true);
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/avif"]').click();
+
+  let dialogMessage = '';
+  page.once('dialog', async dialog => {
+    dialogMessage = dialog.message();
+    await dialog.accept();
+  });
+  await page.locator('#apply-btn').click();
+
+  await expect(page.locator('#apply-btn')).toHaveText('Apply Changes');
+  expect(dialogMessage).toContain('Image processing failed.');
+  expect(pageErrors).toEqual([]);
+});
+
 test('clicking download before processing does not download an empty file', async ({ page }) => {
   await page.goto('/');
   let downloadCount = 0;
