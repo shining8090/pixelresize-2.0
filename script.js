@@ -658,7 +658,20 @@ function setupEventListeners() {
         updateInfo();
     });
 
-    applyBtn.addEventListener('click', () => applyChanges());
+    applyBtn.addEventListener('click', async () => {
+        try {
+            await applyChanges();
+        } catch (error) {
+            // Recover the UI when an encoder or browser API fails (for example,
+            // when the remote AVIF module cannot be downloaded).
+            processedBlob = null;
+            applyBtn.textContent = 'Apply Changes';
+            const detail = error instanceof Error && error.message
+                ? ` ${error.message}`
+                : '';
+            alert(`Image processing failed.${detail} Please try again.`);
+        }
+    });
     downloadBtn.addEventListener('click', handleDownload);
     removeImgBtn.addEventListener('click', resetApp);
 
