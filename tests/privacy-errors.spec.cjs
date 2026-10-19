@@ -186,16 +186,22 @@ test('corrupted image data is rejected and upload UI recovers', async ({ page })
   expect(pageErrors).toEqual([]);
 });
 
-test('unsupported files are rejected and the editor remains unopened', async ({ page }) => {
+test('unsupported files show an error and the editor remains unopened', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto('/');
+  let dialogMessage = '';
+  page.once('dialog', async dialog => {
+    dialogMessage = dialog.message();
+    await dialog.accept();
+  });
   await page.locator('#file-input').setInputFiles({
     name: 'not-an-image.txt',
     mimeType: 'text/plain',
     buffer: Buffer.from('this is deliberately not an image')
   });
 
+  await expect.poll(() => dialogMessage).toContain('Unsupported file type.');
   await expect(page.locator('#upload-zone')).toBeVisible();
   await expect(page.locator('#processing-ui')).toBeHidden();
   expect(pageErrors).toEqual([]);
