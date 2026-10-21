@@ -99,6 +99,46 @@ test('aspect-ratio locking never derives a zero-pixel dimension and preserves em
   expect(pageErrors).toEqual([]);
 });
 
+test('crop handle dragged past image edges remains within crop preview bounds', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'crop-boundary-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await page.locator('.tab-btn[data-tab="crop"]').click();
+  await page.locator('#aspect-ratio-presets [data-ratio="1"]').click();
+
+  const handle = page.locator('#crop-box .handle-se');
+  const bounds = await handle.boundingBox();
+  expect(bounds).toBeTruthy();
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(bounds.x + bounds.width / 2 + 2000, bounds.y + bounds.height / 2 + 2000, { steps: 5 });
+  await page.mouse.up();
+
+  const geometry = await page.evaluate(() => {
+    const box = document.getElementById('crop-box');
+    const preview = document.getElementById('crop-preview');
+    return {
+      x: parseFloat(box.style.left),
+      y: parseFloat(box.style.top),
+      width: parseFloat(box.style.width),
+      height: parseFloat(box.style.height),
+      previewWidth: preview.clientWidth,
+      previewHeight: preview.clientHeight
+    };
+  });
+  expect(geometry.x).toBeGreaterThanOrEqual(0);
+  expect(geometry.y).toBeGreaterThanOrEqual(0);
+  expect(geometry.x + geometry.width).toBeLessThanOrEqual(geometry.previewWidth + 1);
+  expect(geometry.y + geometry.height).toBeLessThanOrEqual(geometry.previewHeight + 1);
+  expect(pageErrors).toEqual([]);
+});
+
 test('1:1 crop followed by explicit 256x256 resize preserves dimensions and center content', async ({ page }) => {
   await page.goto('/');
   await page.locator('#file-input').setInputFiles({
