@@ -246,3 +246,70 @@ test('1:1 crop followed by explicit 256x256 resize preserves dimensions and cent
   expect(downloaded.center[1]).toBeGreaterThan(200);
   expect(downloaded.center[2]).toBeGreaterThan(150);
 });
+
+test('crop rectangle coordinates map to the correct output pixels', async ({ page }) => {
+  const quadrantSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <rect width="100" height="100" fill="#ff0000"/>
+    <rect x="100" width="100" height="100" fill="#00ff00"/>
+    <rect y="100" width="100" height="100" fill="#0000ff"/>
+    <rect x="100" y="100" width="100" height="100" fill="#ffff00"/>
+  </svg>`;
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'crop-coordinate-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(quadrantSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+
+  await page.locator('.tab-btn[data-tab="crop"]').click();
+  await page.locator('#aspect-ratio-presets [data-ratio="1"]').click();
+
+  // Place a deterministic 80x80 crop fully inside the top-left red quadrant.
+  await page.evaluate(() => {
+    const box = document.getElementById('crop-box');
+    const preview = document.getElementById('crop-preview-img');
+    const scaleX = preview.clientWidth / 200;
+    const scaleY = preview.clientHeight / 200;
+    box.style.left = '10px';
+    box.style.top = '10px';
+    box.style.width = '80px';
+    box.style.height = '80px';
+    box.dataset.auditCrop = JSON.stringify({ scaleX, scaleY });
+  });
+
+  // Use the actual rendered crop geometry but make output pixel dimensions explicit.
+  await page.locator('.tab-btn[data-tab="resize"]').click();
+  await page.locator('#maintain-ratio').uncheck();
+  await page.locator('#resize-w').fill('80');
+  await page.locator('#resize-h').fill('80');
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  const result = await page.locator('#main-preview').evaluate(img => {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    return {
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+      topLeft: Array.from(ctx.getImageData(20, 20, 1, 1).data),
+      bottomRight: Array.from(ctx.getImageData(60, 60, 1, 1).data)
+    };
+  });
+
+  expect(result.width).toBe(80);
+  expect(result.height).toBe(80);
+  expect(result.topLeft[0]).toBeGreaterThan(200);
+  expect(result.topLeft[1]).toBeLessThan(40);
+  expect(result.topLeft[2]).toBeLessThan(40);
+  expect(result.bottomRight[0]).toBeGreaterThan(200);
+  expect(result.bottomRight[1]).toBeLessThan(40);
+  expect(result.bottomRight[2]).toBeLessThan(40);
+  expect(pageErrors).toEqual([]);
+});
+
