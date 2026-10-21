@@ -192,9 +192,9 @@ test('rotation preserves quadrant orientation in downloaded output', async ({ pa
       width: image.naturalWidth,
       height: image.naturalHeight,
       topLeft: sample(20, 20),
-      topRight: sample(100, 20),
+      topRight: sample(60, 20),
       bottomLeft: sample(20, 60),
-      bottomRight: sample(100, 60)
+      bottomRight: sample(60, 60)
     };
   }, bytes.toString('base64'));
 
