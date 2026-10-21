@@ -987,13 +987,17 @@ function resizeCrop(handle, dx, dy, maxWidth, maxHeight) {
         }
     }
 
-    // Constraints
-    newW = Math.max(minSize, Math.min(newW, maxWidth - (handle.includes('w') ? 0 : newX)));
-    newH = Math.max(minSize, Math.min(newH, maxHeight - (handle.includes('n') ? 0 : newY)));
-    
-    // Boundary check for movement-based resize
-    if (newX < 0) { newX = 0; if (ar !== 'free') newW = currentCrop.w; }
-    if (newY < 0) { newY = 0; if (ar !== 'free') newH = currentCrop.h; }
+    // Clamp the crop rectangle to the available image area. The minimum size
+    // must never exceed the remaining space, or a crop near an edge can spill
+    // outside the preview even after the max-size clamp.
+    const availableW = Math.max(0, maxWidth - (handle.includes('w') ? 0 : newX));
+    const availableH = Math.max(0, maxHeight - (handle.includes('n') ? 0 : newY));
+    newW = Math.min(availableW, Math.max(Math.min(minSize, availableW), newW));
+    newH = Math.min(availableH, Math.max(Math.min(minSize, availableH), newH));
+
+    // Keep west/north anchored edges inside the image after resizing.
+    newX = Math.max(0, Math.min(newX, maxWidth - newW));
+    newY = Math.max(0, Math.min(newY, maxHeight - newH));
 
     currentCrop.x = newX;
     currentCrop.y = newY;
