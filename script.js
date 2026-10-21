@@ -1257,6 +1257,14 @@ function canvasToGifBlob(canvas) {
             const source = (y * width + x) * 4;
             const target = y * width + x;
             const alpha = imageData[source + 3] / 255;
+            // Fully transparent pixels must stay white after compositing. Do not
+            // let neighboring dithering error tint these pixels or diffuse error
+            // back out of them into the rest of the image.
+            if (alpha === 0) {
+                const whiteKey = (31 << 10) | (31 << 5) | 31;
+                indexedPixels[target] = colorLookup[whiteKey];
+                continue;
+            }
             const red = Math.max(0, Math.min(255, imageData[source] * alpha + 255 * (1 - alpha) + currentR[x + 1]));
             const green = Math.max(0, Math.min(255, imageData[source + 1] * alpha + 255 * (1 - alpha) + currentG[x + 1]));
             const blue = Math.max(0, Math.min(255, imageData[source + 2] * alpha + 255 * (1 - alpha) + currentB[x + 1]));
