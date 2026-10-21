@@ -57,3 +57,31 @@ test('AVIF conversion downloads a real AVIF file with the correct signature', as
   expect(decoded.yellow[1]).toBeGreaterThan(120);
   expect(decoded.yellow[2]).toBeLessThan(120);
 });
+
+test('AVIF conversion reports browser encoder failure and restores the action button', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'avif-error-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/avif"]').click();
+
+  await page.evaluate(() => {
+    HTMLCanvasElement.prototype.toBlob = function (callback) {
+      callback(null);
+    };
+  });
+
+  let message = '';
+  page.once('dialog', async dialog => {
+    message = dialog.message();
+    await dialog.accept();
+  });
+  await page.locator('#apply-btn').click();
+  await expect.poll(() => message).toMatch(/Image processing failed|Could not|AVIF|try again/i);
+  await expect(page.locator('#apply-btn')).toHaveText('Apply Changes');
+});
+
