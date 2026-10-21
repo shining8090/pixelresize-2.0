@@ -108,3 +108,58 @@ test('GIF conversion composites transparent pixels onto white and preserves opaq
   expect(pixels.redArea[2]).toBeLessThan(100);
 });
 
+test('GIF conversion preserves broad color transitions in a gradient', async ({ page }) => {
+  const gradientSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="32" viewBox="0 0 256 32">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#0000ff"/>
+        <stop offset="33%" stop-color="#00ffff"/>
+        <stop offset="66%" stop-color="#ffff00"/>
+        <stop offset="100%" stop-color="#ff0000"/>
+      </linearGradient>
+    </defs>
+    <rect width="256" height="32" fill="url(#g)"/>
+  </svg>`;
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'gif-gradient-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(gradientSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/gif"]').click();
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-btn').click();
+  const download = await downloadPromise;
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = fs.readFileSync(filePath);
+
+  const samples = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/gif;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return [16, 80, 144, 240].map(x =>
+      Array.from(context.getImageData(x, 16, 1, 1).data)
+    );
+  }, bytes.toString('base64'));
+
+  expect(samples).toHaveLength(4);
+  // Broad tolerances test the overall hue progression without requiring exact
+  // pixel matches from a lossy 256-color palette and dithering.
+  expect(samples[0][2]).toBeGreaterThan(samples[0][0]); // blue
+  expect(samples[1][1]).toBeGreaterThan(samples[1][0]); // cyan/green
+  expect(samples[2][0]).toBeGreaterThan(samples[2][2]); // yellow/orange
+  expect(samples[3][0]).toBeGreaterThan(samples[3][2]); // red/orange
+});
+
