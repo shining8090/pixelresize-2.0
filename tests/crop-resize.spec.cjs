@@ -12,6 +12,33 @@ const fixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height=
   <circle cx="600" cy="400" r="180" fill="#fef3c7"/>
 </svg>`;
 
+test('excessive output dimensions are rejected before canvas allocation', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'dimension-limit-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+
+  await page.locator('#maintain-ratio').uncheck();
+  await page.locator('#resize-w').fill('20000');
+  await page.locator('#resize-h').fill('1000');
+
+  let dialogMessage = '';
+  page.once('dialog', async dialog => {
+    dialogMessage = dialog.message();
+    await dialog.accept();
+  });
+  await page.locator('#apply-btn').click();
+
+  await expect.poll(() => dialogMessage).toContain('Requested dimensions are too large.');
+  await expect(page.locator('#apply-btn')).toHaveText('Apply Changes');
+  expect(pageErrors).toEqual([]);
+});
+
 test('1:1 crop followed by explicit 256x256 resize preserves dimensions and center content', async ({ page }) => {
   await page.goto('/');
   await page.locator('#file-input').setInputFiles({
