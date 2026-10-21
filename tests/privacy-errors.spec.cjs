@@ -163,6 +163,28 @@ test('HEIC conversion failure restores the apply button and reports an error', a
   await expect(page.locator('#processing-ui')).toBeHidden();
 });
 
+test('oversized image uploads are rejected before processing', async ({ page }) => {
+  await page.goto('/');
+  let dialogMessage = '';
+  page.once('dialog', async dialog => {
+    dialogMessage = dialog.message();
+    await dialog.accept();
+  });
+
+  await page.locator('#file-input').evaluate(input => {
+    const file = new File(['small fixture'], 'oversized-photo.png', { type: 'image/png' });
+    Object.defineProperty(file, 'size', { value: 50 * 1024 * 1024 + 1 });
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    input.files = transfer.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+
+  await expect.poll(() => dialogMessage).toContain('larger than 50 MB');
+  await expect(page.locator('#upload-zone')).toBeVisible();
+  await expect(page.locator('#processing-ui')).toBeHidden();
+});
+
 test('corrupted image data is rejected and upload UI recovers', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
