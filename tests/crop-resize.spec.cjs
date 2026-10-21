@@ -68,6 +68,37 @@ test('invalid resize dimensions are rejected without processing', async ({ page 
   expect(pageErrors).toEqual([]);
 });
 
+test('aspect-ratio locking never derives a zero-pixel dimension and preserves empty input for validation', async ({ page }) => {
+  const wideSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300"><rect width="1200" height="300" fill="#2563eb"/></svg>';
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'wide-ratio-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(wideSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+
+  await page.locator('#maintain-ratio').check();
+  await page.locator('#resize-w').fill('1');
+  await expect(page.locator('#resize-h')).toHaveValue('1');
+
+  await page.locator('#resize-w').fill('');
+  await expect(page.locator('#resize-w')).toHaveValue('');
+  await expect(page.locator('#resize-h')).toHaveValue('1');
+
+  let dialogMessage = '';
+  page.once('dialog', async dialog => {
+    dialogMessage = dialog.message();
+    await dialog.accept();
+  });
+  await page.locator('#apply-btn').click();
+  await expect.poll(() => dialogMessage).toContain('Enter a whole-number width and height greater than zero.');
+  await expect(page.locator('#apply-btn')).toHaveText('Apply Changes');
+  expect(pageErrors).toEqual([]);
+});
+
 test('1:1 crop followed by explicit 256x256 resize preserves dimensions and center content', async ({ page }) => {
   await page.goto('/');
   await page.locator('#file-input').setInputFiles({
