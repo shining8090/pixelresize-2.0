@@ -122,7 +122,7 @@ test('crop handle dragged past image edges remains within crop preview bounds', 
 
   const geometry = await page.evaluate(() => {
     const box = document.getElementById('crop-box');
-    const preview = document.getElementById('crop-preview');
+    const preview = document.getElementById('crop-preview-img');
     return {
       x: parseFloat(box.style.left),
       y: parseFloat(box.style.top),
