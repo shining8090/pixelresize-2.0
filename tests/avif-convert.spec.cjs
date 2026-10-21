@@ -58,7 +58,10 @@ test('AVIF conversion downloads a real AVIF file with the correct signature', as
   expect(decoded.yellow[2]).toBeLessThan(120);
 });
 
-test('AVIF conversion reports browser encoder failure and restores the action button', async ({ page }) => {
+test('AVIF conversion reports encoder-load failure and restores the action button', async ({ page }) => {
+  // AVIF currently uses a remote encoder module; force that dependency to fail
+  // so this test exercises the real applyChanges() catch/recovery path.
+  await page.route('https://code4fukui.github.io/AVIF/AVIF.js', route => route.abort());
   await page.goto('/');
   await page.locator('#file-input').setInputFiles({
     name: 'avif-error-fixture.svg',
@@ -68,12 +71,6 @@ test('AVIF conversion reports browser encoder failure and restores the action bu
   await expect(page.locator('#processing-ui')).toBeVisible();
   await page.locator('.tab-btn[data-tab="convert"]').click();
   await page.locator('#tab-convert [data-format="image/avif"]').click();
-
-  await page.evaluate(() => {
-    HTMLCanvasElement.prototype.toBlob = function (callback) {
-      callback(null);
-    };
-  });
 
   // Replace alert with a deterministic spy to avoid native-dialog timing races.
   await page.evaluate(() => {
