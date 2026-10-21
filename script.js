@@ -1149,7 +1149,8 @@ function canvasToGifBlob(canvas) {
     // Median-cut quantization creates a palette tailored to this image rather
     // than forcing every image into a fixed 3-3-2 RGB palette.
     let boxes = [colors];
-    while (boxes.length < 256) {
+    // Reserve one palette slot for exact white compositing of transparent pixels.
+    while (boxes.length < 255) {
         let splitIndex = -1;
         let splitScore = -1;
         let splitChannel = 'r';
@@ -1205,6 +1206,11 @@ function canvasToGifBlob(canvas) {
         paletteColors.push(color);
         palette.push((color.r << 16) | (color.g << 8) | color.b);
     }
+
+    // Keep pure white available even when median-cut would otherwise merge it
+    // with other colors, so transparent areas cannot inherit a tinted palette color.
+    paletteColors.push({ r: 255, g: 255, b: 255 });
+    palette.push(0xffffff);
 
     // GIF global palettes must contain a power-of-two number of entries.
     while (palette.length < 2) {
