@@ -75,13 +75,14 @@ test('AVIF conversion reports browser encoder failure and restores the action bu
     };
   });
 
-  let message = '';
-  page.once('dialog', async dialog => {
-    message = dialog.message();
-    await dialog.accept();
+  // Replace alert with a deterministic spy to avoid native-dialog timing races.
+  await page.evaluate(() => {
+    window.__auditAlertMessage = '';
+    window.alert = message => { window.__auditAlertMessage = String(message); };
   });
   await page.locator('#apply-btn').click();
-  await expect.poll(() => message).toMatch(/Image processing failed|Could not|AVIF|try again/i);
+  await expect.poll(() => page.evaluate(() => window.__auditAlertMessage))
+    .toMatch(/Image processing failed|Could not|AVIF|try again/i);
   await expect(page.locator('#apply-btn')).toHaveText('Apply Changes');
 });
 
