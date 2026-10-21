@@ -1434,8 +1434,16 @@ async function applyChanges() {
     // dimensions unless the user explicitly changed the resize dimensions.
     // Previously the original resize fields (for example 2880x1650) were
     // reused after a 1:1 crop, stretching the cropped square back to 16:9.
-    const inputW = parseInt(resizeW.value) || 0;
-    const inputH = parseInt(resizeH.value) || 0;
+    const rawWidth = resizeW.value.trim();
+    const rawHeight = resizeH.value.trim();
+    const inputW = Number(rawWidth);
+    const inputH = Number(rawHeight);
+    if (!rawWidth || !rawHeight
+        || !Number.isFinite(inputW) || !Number.isFinite(inputH)
+        || !Number.isInteger(inputW) || !Number.isInteger(inputH)
+        || inputW < 1 || inputH < 1) {
+        throw new Error('Enter a whole-number width and height greater than zero.');
+    }
     const cropWasSelected = currentCrop.w > 0 && currentCrop.h > 0;
     const resizeStillMatchesOriginal = inputW === currentImage.width && inputH === currentImage.height;
     const finalW = cropWasSelected && resizeStillMatchesOriginal ? Math.max(1, Math.round(sw)) : (inputW || Math.max(1, Math.round(sw)));
