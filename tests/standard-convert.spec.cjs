@@ -170,3 +170,56 @@ test('WebP conversion decodes and preserves output dimensions and sample colors'
   expect(pageErrors).toEqual([]);
 });
 
+test('PNG conversion preserves transparent pixels in the downloaded image', async ({ page }) => {
+  const transparentSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60" viewBox="0 0 80 60">
+    <rect x="20" y="15" width="40" height="30" fill="#ff0000"/>
+  </svg>`;
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'png-transparency-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(transparentSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/png"]').click();
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-btn').click();
+  const download = await downloadPromise;
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = fs.readFileSync(filePath);
+  expect(bytes.subarray(1, 4).toString('ascii')).toBe('PNG');
+
+  const decoded = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/png;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      transparent: Array.from(context.getImageData(5, 5, 1, 1).data),
+      opaque: Array.from(context.getImageData(40, 30, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+
+  expect(decoded.width).toBe(80);
+  expect(decoded.height).toBe(60);
+  expect(decoded.transparent[3]).toBe(0);
+  expect(decoded.opaque[0]).toBeGreaterThan(200);
+  expect(decoded.opaque[1]).toBeLessThan(50);
+  expect(decoded.opaque[2]).toBeLessThan(50);
+  expect(decoded.opaque[3]).toBeGreaterThan(240);
+  expect(pageErrors).toEqual([]);
+});
+
