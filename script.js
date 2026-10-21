@@ -1441,6 +1441,17 @@ async function applyChanges() {
     const finalW = cropWasSelected && resizeStillMatchesOriginal ? Math.max(1, Math.round(sw)) : (inputW || Math.max(1, Math.round(sw)));
     const finalH = cropWasSelected && resizeStillMatchesOriginal ? Math.max(1, Math.round(sh)) : (inputH || Math.max(1, Math.round(sh)));
 
+    // Bound output canvas allocation to avoid extreme dimensions or excessive
+    // pixel buffers from accidental or malicious resize values.
+    const MAX_OUTPUT_DIMENSION = 16384;
+    const MAX_OUTPUT_PIXELS = 40000000;
+    if (!Number.isSafeInteger(finalW) || !Number.isSafeInteger(finalH)
+        || finalW < 1 || finalH < 1
+        || finalW > MAX_OUTPUT_DIMENSION || finalH > MAX_OUTPUT_DIMENSION
+        || finalW * finalH > MAX_OUTPUT_PIXELS) {
+        throw new Error('Requested dimensions are too large. Choose dimensions up to 16,384 px per side and 40 megapixels total.');
+    }
+
     const isHorizontal = rotation % 180 === 0;
     canvas.width = isHorizontal ? finalW : finalH;
     canvas.height = isHorizontal ? finalH : finalW;
