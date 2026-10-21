@@ -726,6 +726,13 @@ function setupEventListeners() {
 async function handleFiles(files) {
     if (!files || files.length === 0) return;
     let file = files[0];
+
+    // Guard against unusually large uploads that can exhaust browser memory.
+    const MAX_INPUT_FILE_BYTES = 50 * 1024 * 1024;
+    if (file.size > MAX_INPUT_FILE_BYTES) {
+        alert('This image is larger than 50 MB. Please choose a smaller image.');
+        return;
+    }
     
     // HEIC to JPG conversion if needed
     if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
