@@ -121,3 +121,52 @@ test('JPG to PNG conversion preserves transparent-free color pixels and dimensio
   expect(pageErrors).toEqual([]);
 });
 
+test('WebP conversion decodes and preserves output dimensions and sample colors', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'webp-pixel-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/webp"]').click();
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-btn').click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/\.webp$/i);
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = fs.readFileSync(filePath);
+  expect(bytes.subarray(0, 4).toString('ascii')).toBe('RIFF');
+  expect(bytes.subarray(8, 12).toString('ascii')).toBe('WEBP');
+
+  const decoded = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/webp;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      yellow: Array.from(context.getImageData(100, 100, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+
+  expect(decoded.width).toBe(320);
+  expect(decoded.height).toBe(240);
+  expect(decoded.yellow[0]).toBeGreaterThan(150);
+  expect(decoded.yellow[1]).toBeGreaterThan(100);
+  expect(decoded.yellow[2]).toBeLessThan(150);
+  expect(pageErrors).toEqual([]);
+});
+
