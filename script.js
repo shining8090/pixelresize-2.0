@@ -635,16 +635,22 @@ function setupEventListeners() {
     resizeW.addEventListener('input', () => {
         markUnsaved();
         processedBlob = null;
-        if (maintainRatio.checked && currentImage) {
-            resizeH.value = Math.round((resizeW.value / currentImage.width) * currentImage.height);
+        if (maintainRatio.checked && currentImage && resizeW.value.trim() !== '') {
+            const requestedWidth = Number(resizeW.value);
+            if (Number.isFinite(requestedWidth) && requestedWidth > 0) {
+                resizeH.value = Math.max(1, Math.round((requestedWidth / currentImage.width) * currentImage.height));
+            }
         }
         updateInfo();
     });
     resizeH.addEventListener('input', () => {
         markUnsaved();
         processedBlob = null;
-        if (maintainRatio.checked && currentImage) {
-            resizeW.value = Math.round((resizeH.value / currentImage.height) * currentImage.width);
+        if (maintainRatio.checked && currentImage && resizeH.value.trim() !== '') {
+            const requestedHeight = Number(resizeH.value);
+            if (Number.isFinite(requestedHeight) && requestedHeight > 0) {
+                resizeW.value = Math.max(1, Math.round((requestedHeight / currentImage.height) * currentImage.width));
+            }
         }
         updateInfo();
     });
