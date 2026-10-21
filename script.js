@@ -1185,6 +1185,9 @@ function canvasToGifBlob(canvas) {
             cumulative += box[cut - 1].count;
             if (cumulative >= total / 2) break;
         }
+        // Keep both median-cut partitions non-empty. When the midpoint is
+        // reached only after the final color, cut can equal box.length.
+        cut = Math.max(1, Math.min(box.length - 1, cut));
         boxes.splice(splitIndex, 1, box.slice(0, cut), box.slice(cut));
     }
 
