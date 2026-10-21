@@ -136,6 +136,8 @@ test('crop handle dragged past image edges remains within crop preview bounds', 
   expect(geometry.y).toBeGreaterThanOrEqual(0);
   expect(geometry.x + geometry.width).toBeLessThanOrEqual(geometry.previewWidth + 1);
   expect(geometry.y + geometry.height).toBeLessThanOrEqual(geometry.previewHeight + 1);
+  // A locked 1:1 crop must remain square when the handle reaches image edges.
+  expect(Math.abs(geometry.width - geometry.height)).toBeLessThanOrEqual(1);
   expect(pageErrors).toEqual([]);
 });
 
