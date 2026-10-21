@@ -61,3 +61,60 @@ test('BMP conversion downloads a valid 24-bit BMP file and preserves image conte
   expect(decoded.yellow[1]).toBeGreaterThan(100);
   expect(decoded.yellow[2]).toBeLessThan(140);
 });
+
+test('BMP conversion handles row padding and preserves top and bottom rows', async ({ page }) => {
+  const oddWidthSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="17" height="9" viewBox="0 0 17 9">
+    <rect width="17" height="4" fill="#e53935"/>
+    <rect y="4" width="17" height="5" fill="#174ea6"/>
+  </svg>`;
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'bmp-odd-width-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(oddWidthSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/bmp"]').click();
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-btn').click();
+  const download = await downloadPromise;
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = fs.readFileSync(filePath);
+
+  // 17 * 3 = 51 bytes, padded to a 52-byte row in a 24-bit BMP.
+  expect(bytes.readUInt32LE(2)).toBe(54 + 52 * 9);
+  expect(bytes.readUInt32LE(34)).toBe(52 * 9);
+  expect(bytes.readInt32LE(18)).toBe(17);
+  expect(bytes.readInt32LE(22)).toBe(9);
+
+  const decoded = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/bmp;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      top: Array.from(context.getImageData(8, 1, 1, 1).data),
+      bottom: Array.from(context.getImageData(8, 7, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+
+  expect(decoded.width).toBe(17);
+  expect(decoded.height).toBe(9);
+  expect(decoded.top[0]).toBeGreaterThan(180);
+  expect(decoded.top[1]).toBeLessThan(100);
+  expect(decoded.bottom[2]).toBeGreaterThan(100);
+  expect(decoded.bottom[0]).toBeLessThan(100);
+});
+
