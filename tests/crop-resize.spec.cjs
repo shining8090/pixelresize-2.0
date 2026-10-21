@@ -270,14 +270,16 @@ test('crop rectangle coordinates map to the correct output pixels', async ({ pag
   // Place a deterministic 80x80 crop fully inside the top-left red quadrant.
   await page.evaluate(() => {
     const box = document.getElementById('crop-box');
-    const preview = document.getElementById('crop-preview-img');
-    const scaleX = preview.clientWidth / 200;
-    const scaleY = preview.clientHeight / 200;
+    // The crop box's CSS alone is presentation; applyChanges reads currentCrop.
+    // Keep the state and visible rectangle synchronized for a meaningful pixel test.
+    currentCrop.x = 10;
+    currentCrop.y = 10;
+    currentCrop.w = 80;
+    currentCrop.h = 80;
     box.style.left = '10px';
     box.style.top = '10px';
     box.style.width = '80px';
     box.style.height = '80px';
-    box.dataset.auditCrop = JSON.stringify({ scaleX, scaleY });
   });
 
   // Use the actual rendered crop geometry but make output pixel dimensions explicit.
