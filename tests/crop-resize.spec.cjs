@@ -141,6 +141,40 @@ test('crop handle dragged past image edges remains within crop preview bounds', 
   expect(pageErrors).toEqual([]);
 });
 
+
+test('crop after rotation and flips produces a valid image without browser errors', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'crop-transform-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+
+  await page.locator('.tab-btn[data-tab="crop"]').click();
+  await page.locator('#rotate-right').click();
+  await page.locator('#flip-h').click();
+  await page.locator('#aspect-ratio-presets [data-ratio="1"]').click();
+
+  const cropImage = page.locator('#crop-preview-img');
+  await expect.poll(() => cropImage.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  await expect(page.locator('#crop-box')).toBeVisible();
+
+  await page.locator('.tab-btn[data-tab="resize"]').click();
+  await page.locator('#maintain-ratio').uncheck();
+  await page.locator('#resize-w').fill('256');
+  await page.locator('#resize-h').fill('256');
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  const preview = page.locator('#main-preview');
+  await expect.poll(() => preview.evaluate(img => img.naturalWidth)).toBe(256);
+  await expect.poll(() => preview.evaluate(img => img.naturalHeight)).toBe(256);
+  expect(pageErrors).toEqual([]);
+});
+
 test('1:1 crop followed by explicit 256x256 resize preserves dimensions and center content', async ({ page }) => {
   await page.goto('/');
   await page.locator('#file-input').setInputFiles({
