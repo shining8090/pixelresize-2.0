@@ -39,6 +39,35 @@ test('excessive output dimensions are rejected before canvas allocation', async 
   expect(pageErrors).toEqual([]);
 });
 
+test('invalid resize dimensions are rejected without processing', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'invalid-dimension-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await page.locator('#maintain-ratio').uncheck();
+
+  for (const [width, height] of [['0', '100'], ['-1', '100'], ['12.5', '100'], ['', '100']]) {
+    await page.locator('#resize-w').fill(width);
+    await page.locator('#resize-h').fill(height);
+
+    let dialogMessage = '';
+    page.once('dialog', async dialog => {
+      dialogMessage = dialog.message();
+      await dialog.accept();
+    });
+    await page.locator('#apply-btn').click();
+
+    await expect.poll(() => dialogMessage).toContain('Enter a whole-number width and height greater than zero.');
+    await expect(page.locator('#apply-btn')).toHaveText('Apply Changes');
+  }
+  expect(pageErrors).toEqual([]);
+});
+
 test('1:1 crop followed by explicit 256x256 resize preserves dimensions and center content', async ({ page }) => {
   await page.goto('/');
   await page.locator('#file-input').setInputFiles({
