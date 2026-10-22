@@ -1011,6 +1011,20 @@ function endCropAction(e) {
 }
 
 async function canvasToBlob(canvas, format, quality) {
+    // JPEG has no alpha channel. Composite transparent pixels onto white before
+    // encoding, so transparent source areas do not turn black in downloaded JPGs.
+    if (format === 'image/jpeg') {
+        const jpegCanvas = document.createElement('canvas');
+        jpegCanvas.width = canvas.width;
+        jpegCanvas.height = canvas.height;
+        const jpegContext = jpegCanvas.getContext('2d');
+        if (!jpegContext) throw new Error('JPEG conversion could not access image pixels.');
+        jpegContext.fillStyle = '#ffffff';
+        jpegContext.fillRect(0, 0, jpegCanvas.width, jpegCanvas.height);
+        jpegContext.drawImage(canvas, 0, 0);
+        canvas = jpegCanvas;
+    }
+
     // Canvas APIs do not natively encode BMP. Write a standard 24-bit BMP
     // locally so the requested format is never silently replaced by PNG.
     if (format === 'image/bmp') {
