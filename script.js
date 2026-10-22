@@ -1028,11 +1028,19 @@ async function canvasToBlob(canvas, format, quality) {
     // Canvas APIs do not natively encode BMP. Write a standard 24-bit BMP
     // locally so the requested format is never silently replaced by PNG.
     if (format === 'image/bmp') {
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (!ctx) throw new Error('BMP conversion could not access image pixels.');
-        const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const width = canvas.width;
-        const height = canvas.height;
+        // BMP output here is 24-bit and has no alpha channel. Composite onto
+        // white first so transparent source pixels do not become black.
+        const bmpCanvas = document.createElement('canvas');
+        bmpCanvas.width = canvas.width;
+        bmpCanvas.height = canvas.height;
+        const bmpContext = bmpCanvas.getContext('2d', { willReadFrequently: true });
+        if (!bmpContext) throw new Error('BMP conversion could not access image pixels.');
+        bmpContext.fillStyle = '#ffffff';
+        bmpContext.fillRect(0, 0, bmpCanvas.width, bmpCanvas.height);
+        bmpContext.drawImage(canvas, 0, 0);
+        const { data } = bmpContext.getImageData(0, 0, bmpCanvas.width, bmpCanvas.height);
+        const width = bmpCanvas.width;
+        const height = bmpCanvas.height;
         const rowSize = Math.floor((width * 3 + 3) / 4) * 4;
         const pixelBytes = rowSize * height;
         const buffer = new ArrayBuffer(54 + pixelBytes);
