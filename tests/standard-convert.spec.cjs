@@ -223,3 +223,59 @@ test('PNG conversion preserves transparent pixels in the downloaded image', asyn
   expect(pageErrors).toEqual([]);
 });
 
+test('JPEG conversion produces an opaque image from transparent input', async ({ page }) => {
+  const transparentSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60" viewBox="0 0 80 60">
+    <rect x="20" y="15" width="40" height="30" fill="#ff0000"/>
+  </svg>`;
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'jpeg-transparency-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(transparentSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/jpeg"]').click();
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-btn').click();
+  const download = await downloadPromise;
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = fs.readFileSync(filePath);
+  expect(bytes[0]).toBe(0xff);
+  expect(bytes[1]).toBe(0xd8);
+
+  const decoded = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/jpeg;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      background: Array.from(context.getImageData(5, 5, 1, 1).data),
+      foreground: Array.from(context.getImageData(40, 30, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+
+  expect(decoded.width).toBe(80);
+  expect(decoded.height).toBe(60);
+  // JPEG has no alpha channel; transparent input should export as white, not black.
+  expect(decoded.background[0]).toBeGreaterThan(220);
+  expect(decoded.background[1]).toBeGreaterThan(220);
+  expect(decoded.background[2]).toBeGreaterThan(220);
+  expect(decoded.foreground[0]).toBeGreaterThan(180);
+  expect(decoded.foreground[1]).toBeLessThan(80);
+  expect(decoded.foreground[2]).toBeLessThan(80);
+  expect(pageErrors).toEqual([]);
+});
+
