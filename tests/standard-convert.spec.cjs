@@ -279,3 +279,59 @@ test('JPEG conversion produces an opaque image from transparent input', async ({
   expect(pageErrors).toEqual([]);
 });
 
+
+
+test('WebP conversion preserves transparent pixels in the downloaded image', async ({ page }) => {
+  const transparentSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60" viewBox="0 0 80 60">
+    <rect x="20" y="15" width="40" height="30" fill="#e53935"/>
+  </svg>`;
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'webp-transparency-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(transparentSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/webp"]').click();
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-btn').click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename().toLowerCase().endsWith('.webp')).toBe(true);
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = fs.readFileSync(filePath);
+  expect(bytes.subarray(0, 4).toString('ascii')).toBe('RIFF');
+  expect(bytes.subarray(8, 12).toString('ascii')).toBe('WEBP');
+
+  const pixels = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/webp;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      transparent: Array.from(context.getImageData(5, 5, 1, 1).data),
+      foreground: Array.from(context.getImageData(35, 25, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+
+  expect(pixels.width).toBe(80);
+  expect(pixels.height).toBe(60);
+  expect(pixels.transparent[3]).toBe(0);
+  expect(pixels.foreground[0]).toBeGreaterThan(170);
+  expect(pixels.foreground[1]).toBeLessThan(110);
+  expect(pixels.foreground[2]).toBeLessThan(110);
+  expect(pixels.foreground[3]).toBeGreaterThan(240);
+  expect(pageErrors).toEqual([]);
+});
