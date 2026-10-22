@@ -106,7 +106,7 @@ test('AVIF conversion preserves transparency and foreground pixels in the downlo
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#download-btn').click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/\\.avif$/i);
+  expect(download.suggestedFilename().toLowerCase().endsWith('.avif')).toBe(true);
   const filePath = await download.path();
   expect(filePath).toBeTruthy();
   const bytes = fs.readFileSync(filePath);
