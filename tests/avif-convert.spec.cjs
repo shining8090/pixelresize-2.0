@@ -83,3 +83,58 @@ test('AVIF conversion reports encoder-load failure and restores the action butto
   await expect(page.locator('#apply-btn')).toHaveText('Apply Changes');
 });
 
+
+
+test('AVIF conversion preserves transparency and foreground pixels in the downloaded image', async ({ page }) => {
+  const transparentSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60" viewBox="0 0 80 60">
+    <rect x="20" y="15" width="40" height="30" fill="#e53935"/>
+  </svg>`;
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'avif-transparency-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(transparentSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/avif"]').click();
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-btn').click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/\\.avif$/i);
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = fs.readFileSync(filePath);
+  expect(bytes.subarray(4, 8).toString('ascii')).toBe('ftyp');
+  expect(bytes.subarray(8, 12).toString('ascii')).toMatch(/avif|avis/);
+
+  const pixels = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/avif;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      transparent: Array.from(context.getImageData(5, 5, 1, 1).data),
+      foreground: Array.from(context.getImageData(35, 25, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+
+  expect(pixels.width).toBe(80);
+  expect(pixels.height).toBe(60);
+  expect(pixels.transparent[3]).toBeLessThan(20);
+  expect(pixels.foreground[0]).toBeGreaterThan(170);
+  expect(pixels.foreground[1]).toBeLessThan(110);
+  expect(pixels.foreground[2]).toBeLessThan(110);
+  expect(pageErrors).toEqual([]);
+});
