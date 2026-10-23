@@ -230,3 +230,30 @@ for (const route of directRouteCases) {
     }
   });
 }
+
+
+test('every sitemap URL is canonical, unique, and resolves to an HTML page', async ({ page }) => {
+  const sitemapResponse = await page.request.get('/sitemap.xml');
+  expect(sitemapResponse.status(), 'sitemap.xml should be served successfully').toBe(200);
+  expect(sitemapResponse.headers()['content-type']).toMatch(/xml/i);
+
+  const xml = await sitemapResponse.text();
+  expect(xml).toMatch(/<urlset\b[^>]*xmlns=["']https:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9["']/i);
+
+  const locations = [...xml.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi)].map(match => match[1].trim());
+  expect(locations.length, 'sitemap should contain at least one URL').toBeGreaterThan(0);
+  expect(new Set(locations).size, 'sitemap should not contain duplicate URLs').toBe(locations.length);
+
+  for (const location of locations) {
+    let url;
+    expect(() => { url = new URL(location); }, `valid sitemap URL: ${location}`).not.toThrow();
+    expect(url.origin, `sitemap URL should use the canonical origin: ${location}`).toBe('https://pixelresize.site');
+    expect(url.search, `sitemap URL should not contain query parameters: ${location}`).toBe('');
+    expect(url.hash, `sitemap URL should not contain a fragment: ${location}`).toBe('');
+
+    const response = await page.request.get(url.pathname);
+    expect(response.status(), `sitemap page should resolve successfully: ${location}`).toBe(200);
+    expect(response.headers()['content-type'], `sitemap URL should resolve to HTML: ${location}`).toMatch(/text\/html/i);
+    expect((await response.text()).match(/<title>\s*[^<]+\s*<\/title>/i), `sitemap page should have a non-empty title: ${location}`).not.toBeNull();
+  }
+});
