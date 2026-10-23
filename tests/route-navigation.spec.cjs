@@ -238,7 +238,7 @@ test('every sitemap URL is canonical, unique, and resolves to an HTML page', asy
   expect(sitemapResponse.headers()['content-type']).toMatch(/xml/i);
 
   const xml = await sitemapResponse.text();
-  expect(xml).toMatch(/<urlset\b[^>]*xmlns=["']https:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9["']/i);
+  expect(xml).toMatch(/<urlset\b[^>]*xmlns=["']http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9["']/i);
 
   const locations = [...xml.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi)].map(match => match[1].trim());
   expect(locations.length, 'sitemap should contain at least one URL').toBeGreaterThan(0);
