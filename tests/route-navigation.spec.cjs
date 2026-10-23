@@ -257,3 +257,26 @@ test('every sitemap URL is canonical, unique, and resolves to an HTML page', asy
     expect((await response.text()).match(/<title>\s*[^<]+\s*<\/title>/i), `sitemap page should have a non-empty title: ${location}`).not.toBeNull();
   }
 });
+
+test('Chromium homepage and image-editor smoke test has no browser errors', async ({ page }) => {
+  const browserErrors = [];
+  page.on('pageerror', error => browserErrors.push(`pageerror: ${error.message}`));
+  page.on('console', message => {
+    if (message.type() === 'error') browserErrors.push(`console.error: ${message.text()}`);
+  });
+
+  await page.goto('/');
+  await expect(page.locator('main')).toBeVisible();
+  await expect(page.locator('#file-input')).toBeAttached();
+
+  await page.locator('#file-input').setInputFiles({
+    name: 'browser-health-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await expect(page.locator('#main-preview')).toHaveJSProperty('complete', true);
+
+  expect(browserErrors, 'Chromium should not report uncaught page errors or console errors during initial load and image-editor startup').toEqual([]);
+});
+
