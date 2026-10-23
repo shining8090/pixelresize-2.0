@@ -228,3 +228,29 @@ test('unsupported files show an error and the editor remains unopened', async ({
   await expect(page.locator('#processing-ui')).toBeHidden();
   expect(pageErrors).toEqual([]);
 });
+
+test('resize and target-size workflows do not transmit the uploaded image to remote hosts', async ({ page }) => {
+  const remoteRequests = trackExternalRequests(page);
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'privacy-resize-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+
+  await page.locator('.tab-btn[data-tab="resize"]').click();
+  await page.locator('#resize-w').fill('160');
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  await page.locator('.tab-btn[data-tab="target"]').click();
+  await page.locator('#tab-target [data-target="50"]').click();
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  expectNoImagePayload(
+    remoteRequests,
+    'Resize and target-size workflows must not send image payloads or the privacy sentinel to remote hosts'
+  );
+});
