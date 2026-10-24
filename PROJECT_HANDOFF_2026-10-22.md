@@ -116,6 +116,17 @@ Status key: **Confirmed** means established from source, workflow/test configura
 - Audit branch `tests/target-size.spec.cjs` (blob `3b72a70e2d72530ec6cd42279e66cb10b9198e0a`).
 - `index.html` on both branches: editor target buttons are currently 10, 50, 100 and 200 KB. This is the root editor's actual preset list; do not assume 20/500 KB are present on this page.
 
+### CI #141 — PASS (verified 2026-10-25)
+- Run: https://github.com/shining8090/pixelresize-2.0/actions/runs/40124650421
+- Commit: `f26bb8a2df1bf477cc7c907fda9b51029228067a`
+- Title: `test: exercise PNG target-size rejection path`
+- Workflow: PixelResize Image Regression Tests, run #141.
+- Verified via GitHub Actions run and job steps: status `completed`, conclusion `success`.
+- The target-size compression regression, crop/resize, GIF conversion, rotate/flip, JPG/PNG/WebP conversion, AVIF, BMP, privacy/error handling, mobile layout, and tool-route/preset suites all report success.
+- This commit fixes the test sequence so the PNG target-size test re-selects PNG after the target preset auto-selects JPEG; it asserts PNG is active before Apply. The misleading test title was also corrected to say the unreachable target reports failure rather than claiming dimensions were verified.
+- This is a passing test commit only; it does **not** fix the confirmed over-limit success bug in production `main` and does not itself prove the full audit is complete.
+- At this point the audit branch head is expected to include this commit; re-check it before another write.
+
 ### Confirmed production defect
 In `main/script.js`, when a target is selected:
 - For lossy formats, the code tries to reduce quality, but if no candidate falls under the byte ceiling, `bestBlob` remains null and the fallback encodes at `low` quality.
