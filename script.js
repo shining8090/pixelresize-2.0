@@ -1451,6 +1451,10 @@ async function encodeTargetSize(canvas, format, targetBytes, startQuality = 0.95
 async function applyChanges() {
     if (!currentImage) return;
 
+    // A new processing attempt invalidates the previous download candidate.
+    // If encoding throws or a target-size check fails, the prior result must
+    // not remain downloadable as though it were the new result.
+    processedBlob = null;
     applyBtn.textContent = 'Processing...';
 
     const canvas = editorCanvas;
@@ -1544,8 +1548,10 @@ async function applyChanges() {
             throw new Error('Image compression failed.');
         }
 
-        if (!targetResult.fitsTarget) {
-            // Do not report success or enable download when the requested size limit was not met.
+        // Check the measured Blob size directly at the UI boundary. Do not rely
+        // only on a helper flag when deciding whether a file may be downloaded.
+        if (!targetResult.fitsTarget || targetResult.blob.size > targetBytes) {
+            // Do not report success or allow any previous result to be downloaded.
             processedBlob = null;
             applyBtn.textContent = 'Apply Changes';
             alert(`Could not reach the selected ${selectedTargetKB} KB limit. The smallest result was ${formatBytes(targetResult.blob.size)}. Try a larger target size.`);
