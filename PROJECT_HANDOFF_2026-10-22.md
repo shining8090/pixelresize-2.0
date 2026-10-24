@@ -14,7 +14,7 @@ Continue the existing PixelResize deep forensic audit. Do not restart the audit 
 - GitHub comparison at that point: audit branch was **256 commits ahead and 0 behind** `main`; no open PR was found.
 - The main branch metadata inspected showed no branch protection / required status checks.
 - **Do not merge the audit branch wholesale.** It is far ahead of production and needs scoped review.
-- This update is documentation only. Do not change app code, merge, or deploy without explicit approval.
+- Application fixes are being made only on the audit branch in scoped steps. Production `main` remains untouched. Never merge or deploy without explicit approval.
 
 ## Mandatory workflow
 **CI → Inspect → Fix confirmed defect → Re-run → Verify → Next task**
@@ -31,6 +31,12 @@ Continue the existing PixelResize deep forensic audit. Do not restart the audit 
 - Preserve the 50 MB input cap and 16,384-pixel / 40-million-pixel output safeguards unless a confirmed reason justifies a change.
 
 ## Latest confirmed CI status
+- **CI #147 — PASS:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40128793555
+  - Application-code commit: `cffdf1ae6f30c6316a1dabe042906244655b3208` — `fix: reject image format encoder fallbacks`.
+  - Verified actual run status: completed / success; run #147 used the exact application-code SHA above.
+  - All configured suites passed: target-size, crop/resize, GIF, rotate/flip, JPG/PNG/WebP, AVIF, BMP, privacy/error handling, mobile layout, and route/preset regression.
+  - Added a regression test that simulates a JPG request receiving a PNG Blob; the app now refuses success and does not permit a download candidate for the wrong MIME type.
+  - Scope: audit branch only. Production `main` remains at `1ce139238822e50940172a96897dbd4e6a9c02bd`; no merge or deployment was performed.
 - **CI #140 — PASS** on the audit-branch base commit `6fd6905201184196737dc1578620b6eca471f803`, dated 2026-10-23: https://github.com/shining8090/pixelresize-2.0/actions/runs/39999332525.
 - **CI #126 — PASS** after JPEG transparency fix: https://github.com/shining8090/pixelresize-2.0/actions/runs/39835458794.
 - **CI #125 — FAIL** originally exposed the JPEG transparency/background regression: https://github.com/shining8090/pixelresize-2.0/actions/runs/39828836919.
@@ -47,7 +53,7 @@ Status key: **Confirmed** means established from source, workflow/test configura
 |---|---|---|---|
 | P1 | Target-size compression can report success when the output exceeds the requested limit | Confirmed source defect on production `main`: fallback can use the lowest-quality Blob without checking the final byte count before normal success/download flow. Audit-branch encoder has a `fitsTarget` check. | Treat as the first repair item. Assert final Blob size is within the requested ceiling; if impossible, show clear failure and do not present a successful download. Test 10/20/50/100/200/500 KB where offered, exact boundaries, tiny/large images and impossible targets. |
 | P1 | JPEG transparency may export with black background | Confirmed defect in `main`; regression caught by CI #125. Commit `e1c36f25` adds white-background compositing; CI #126 passed on audit branch. | Isolate the minimal fix and its regression test. Verify actual downloaded JPG pixels in Chromium on the intended production candidate. |
-| P1 | Selected output format may not match actual output bytes | Confirmed source risk: production uses canvas `toBlob()` with requested MIME but does not validate the returned Blob type. Unsupported types may fall back to PNG. | Validate returned MIME and file signature before marking success or choosing extension. Add explicit GIF/BMP checks. |
+| P1 | Selected output format may not match actual output bytes | Confirmed production `main` source risk: it does not validate the returned Blob MIME. Audit branch now validates `Blob.type` against the requested MIME and CI #147 passes a simulated JPG→PNG fallback regression. Conversion tests inspect actual file signatures for standard formats plus AVIF/BMP. Runtime code validates MIME, not every output's byte signature. | Keep production and audit branch separate. Expand signature verification where format coverage is missing; test actual downloads and dedicated routes in Chromium. Do not merge/deploy yet. |
 | P1 | Dedicated GIF tool route may omit its encoder | Confirmed audit-branch wiring gap: `tools/to-gif/index.html` loads `script.js` but not `gif-encoder.js`, while shared script expects `GifWriter`. Existing GIF tests exercise the homepage route. | Add route-level regression test; ensure the dedicated tool route loads the encoder; test the actual downloaded GIF in Chromium. |
 | P1 | Multi-file selection does not equal batch processing | Confirmed production source mismatch: homepage input allows `multiple`, but `handleFiles(files)` processes only `files[0]`; no complete multi-result/download queue exists. Some copy implies one-image-at-a-time while other UI suggests bulk operation. | Decide explicitly: implement full batch results/download/error handling, or remove `multiple` and bulk-support claims consistently. |
 | P1 | Security policy is permissive; deployment does not configure response headers | Confirmed configuration weakness: CSP includes broad `https:`, `unsafe-inline` and `unsafe-eval`; meta `X-Frame-Options` / `X-Content-Type-Options` do not substitute for HTTP response headers. The deployment workflow uploads static files and has no custom-header setup. Actual live response headers were not verified. | Measure real live response headers using Chromium/network tools first. Then design a supported header approach and tighten CSP incrementally with regression tests. Do not claim production headers are missing until measured. |
@@ -92,7 +98,7 @@ Status key: **Confirmed** means established from source, workflow/test configura
 ## Required next actions (one logical task at a time)
 1. Inspect and isolate the **production target-size output validation** issue and the exact tests already present. Define a scoped change and regression cases before editing application code.
 2. Only with explicit authorization, make the targeted fix on the audit branch; run the relevant tests and verify the actual GitHub Actions run/commit. Do not touch production `main`.
-3. Continue the prioritized P1 items, one at a time: JPEG transparency, output MIME/signature, dedicated GIF wiring, multi-file behavior decision, security headers/CSP evidence, accessibility and contrast.
+3. Continue the prioritized P1 items, one at a time: dedicated GIF route wiring, multi-file behavior decision, security headers/CSP evidence, accessibility and contrast. The output-MIME guard has been added to the audit branch; actual live-production verification is still pending.
 4. Continue SEO route/canonical/sitemap checks, then privacy and dependency checks.
 5. After audit fixes are complete, perform the required final Chromium pass against **live production separately from the audit branch**. Do not call the site audited or production-ready before this is done.
 6. No merge or deployment without explicit approval.
@@ -165,7 +171,19 @@ Status key: **Confirmed** means established from source, workflow/test configura
   - All configured suites passed: target-size compression, crop/resize, GIF, rotate/flip, JPG/PNG/WebP, AVIF, BMP, privacy/error handling, mobile layout, and route/preset regression.
 - **Interpretation:** the passing test verifies the actual file-size ceiling and preservation of shape for these real outputs; it does not require unnecessary resizing when the file already meets the target. The separate simulated-encoder test still forces a resize pass to test the downscaling fallback.
 - Production `main` remains unchanged. No merge or deploy was performed.
-- Next step: continue the target-size edge-case queue, then review the output-MIME/signature defect as the next distinct issue. Final Chromium verification of the live production site remains mandatory.
+- Follow-up: continue target-size edge cases as separate checks if needed. The next distinct audit item is the dedicated GIF route's encoder wiring; the MIME-validation change is recorded in the section below. Final Chromium verification of live production remains mandatory.
+
+
+### Output MIME validation — CI #147 PASS (verified 2026-10-25)
+- **Application-code commit:** `cffdf1ae6f30c6316a1dabe042906244655b3208` — `fix: reject image format encoder fallbacks`.
+- **CI #147 — PASS:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40128793555
+- Verified via GitHub Actions: completed / success, exact run head SHA `cffdf1ae6f30c6316a1dabe042906244655b3208`. The target-size, crop/resize, GIF, transform, standard conversion, AVIF, BMP, privacy/error, mobile-layout, and route/preset steps all completed successfully.
+- Source defect: browser canvas encoding can return a PNG Blob when a requested export MIME is unavailable. Previously, only AVIF had an explicit mismatch guard on the audit branch, allowing other format mismatches to be treated as successful output.
+- Fix on audit branch: after encoding and before creating the preview/download URL, compare `processedBlob.type` with the requested `format`. If they differ, clear the Blob, restore the Apply button, show a clear error, and return before success/download flow. The download handler cannot download because `processedBlob` is null.
+- Added a Playwright regression in `tests/standard-convert.spec.cjs` that forces a JPG request to receive a PNG Blob and verifies the app reports the mismatch and offers no download.
+- Existing conversion tests also verify actual file signatures for standard JPG/PNG/WebP, AVIF, and BMP outputs. **Limit:** the new runtime guard validates MIME, not byte signatures for every output. Tests and the final live Chromium pass must continue checking downloaded bytes.
+- **Scope:** audit branch only. Production `main` remains at `1ce139238822e50940172a96897dbd4e6a9c02bd`; nothing was merged or deployed.
+- **Next task:** inspect and test the dedicated GIF tool route's encoder wiring. Then continue the remaining P1 items. Final Chromium verification of live production remains mandatory.
 
 ### Confirmed production defect
 In `main/script.js`, when a target is selected:
@@ -197,4 +215,4 @@ Audit branch `encodeTargetSize()` returns a `fitsTarget` result, and `applyChang
 6. Make the targeted code change only after explicit user authorization. Then run the target-size regression suite, inspect the actual GitHub Actions run and commit, and verify the resulting file bytes in Chromium. Do not merge or deploy.
 
 ## Start prompt for the next session
-Continue my PixelResize forensic audit from `PROJECT_HANDOFF_2026-10-22.md` in repository https://github.com/shining8090/pixelresize-2.0, branch `seo-tool-logic-fix-2026-10-07`. Read the current handoff first and re-check the branch head and latest GitHub Actions run. The forensic register dated 2026-10-25 is summarized here. The next task is to inspect production target-size output validation and existing regression tests, then propose a minimal scoped fix. Do not edit application code unless I explicitly authorize it. Work one issue at a time: CI → Inspect → Fix confirmed defect → Re-run → Verify → Next task. Never claim PASS without the actual run. Do not merge or deploy without my approval. Final Chromium verification of live production remains required.
+Continue my PixelResize forensic audit from `PROJECT_HANDOFF_2026-10-22.md` in repository https://github.com/shining8090/pixelresize-2.0, branch `seo-tool-logic-fix-2026-10-07`. Read the current handoff first and re-check the branch head and latest GitHub Actions run. The forensic register dated 2026-10-25 is summarized here. The last completed application-code audit item is output MIME validation (CI #147 PASS, audit-branch-only). The next distinct task is to inspect the dedicated GIF tool route's encoder wiring and add/verify route-level regression coverage. Do not merge or deploy without explicit approval. Work one issue at a time: CI → Inspect → Fix confirmed defect → Re-run → Verify → Next task. Never claim PASS without the actual run. Do not merge or deploy without my approval. Final Chromium verification of live production remains required.
