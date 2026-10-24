@@ -163,3 +163,60 @@ test('GIF conversion preserves broad color transitions in a gradient', async ({ 
   expect(samples[3][0]).toBeGreaterThan(samples[3][2]); // red/orange
 });
 
+test('dedicated GIF tool route loads its encoder and downloads a valid GIF', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+
+  await page.goto('/tools/to-gif/');
+  await expect(page).toHaveURL(/\\/tools\\/to-gif\\/$/);
+  await expect(page.locator('script[src="/gif-encoder.js"]')).toHaveCount(1);
+  await expect.poll(() => page.evaluate(() => typeof window.GifWriter)).toBe('function');
+
+  await page.locator('#file-input').setInputFiles({
+    name: 'dedicated-gif-route-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await expect(page.locator('#main-preview')).toHaveJSProperty('complete', true);
+
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/gif"]').click();
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-btn').click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/\\.gif$/i);
+
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = fs.readFileSync(filePath);
+  expect(bytes.length).toBeGreaterThan(20);
+  expect(bytes.subarray(0, 6).toString('ascii')).toMatch(/^GIF8[79]a$/);
+
+  const decoded = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/gif;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      yellow: Array.from(context.getImageData(100, 100, 1, 1).data)
+    };
+  }, bytes.toString('base64'));
+
+  expect(decoded.width).toBe(320);
+  expect(decoded.height).toBe(240);
+  expect(decoded.yellow[0]).toBeGreaterThan(150);
+  expect(decoded.yellow[1]).toBeGreaterThan(100);
+  expect(decoded.yellow[2]).toBeLessThan(140);
+  expect(pageErrors).toEqual([]);
+});
+
