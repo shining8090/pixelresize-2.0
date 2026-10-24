@@ -108,5 +108,42 @@ Status key: **Confirmed** means established from source, workflow/test configura
 - All intended SEO routes, status/redirect behavior, canonicals, sitemap entries and internal links.
 - Record exact tested commit/URL, browser, result and any limitations.
 
+## Target-size compression investigation — read-only update (2026-10-25)
+
+### Files inspected
+- Production `main` `script.js` (blob `798969636fb378007817a19f4279818662b80de7`), especially `applyChanges()` around line 922.
+- Audit branch `script.js` (blob `e47236a06cf0ad0e7eb6dfdec5415d0220203653`), especially `encodeTargetSize()` around line 1338 and `applyChanges()` around line 1451.
+- Audit branch `tests/target-size.spec.cjs` (blob `3b72a70e2d72530ec6cd42279e66cb10b9198e0a`).
+- `index.html` on both branches: editor target buttons are currently 10, 50, 100 and 200 KB. This is the root editor's actual preset list; do not assume 20/500 KB are present on this page.
+
+### Confirmed production defect
+In `main/script.js`, when a target is selected:
+- For lossy formats, the code tries to reduce quality, but if no candidate falls under the byte ceiling, `bestBlob` remains null and the fallback encodes at `low` quality.
+- It then assigns that Blob to `processedBlob` without a final `blob.size <= targetBytes` check.
+- For formats where canvas quality control is not supported, it assigns the `toBlob()` result without checking the target size.
+- The function continues to create a preview URL and set the button to `Applied!`. An oversized output can therefore be presented as successful and remain downloadable.
+- `handleDownload()` downloads any non-null `processedBlob`; it does not enforce the target limit itself.
+
+This is a source-confirmed issue. The exact production behavior has not been re-run in Chromium during this read-only inspection.
+
+### Audit branch's existing protection
+Audit branch `encodeTargetSize()` returns a `fitsTarget` result, and `applyChanges()` checks it. If the output cannot meet the requested ceiling, it clears `processedBlob`, resets the button label, shows a message and returns before the success/download flow. This is the right general safety rule, but it is still necessary to test the real UI paths and should not be merged wholesale without reviewing the broader branch diff.
+
+### Test gap found
+- The audit branch tests the downloaded JPG signature, actual file size and decode/dimensions for 10, 50, 100 and 200 KB.
+- It has an over-limit JPEG failure test.
+- **The test named `PNG target-size mode rejects an output that exceeds the selected limit` does not currently exercise the PNG target-size path.** The target-button click handler automatically clicks the JPEG format button. The test selects PNG first and then clicks the target button, so the target click switches it back to JPEG. To test PNG explicitly through the UI, select the target first, return to the Convert tab, select PNG while the target remains selected, and verify the active format is still PNG immediately before Apply. Confirm that the target setting persists through this sequence.
+- The test called `target-size resizing keeps dimensions within the target after repeated encoder misses` currently asserts that an unreachable target fails; it does not assert output dimensions. Rename it to reflect the failure test, or add a distinct success case that forces dimension downscaling and then verifies the resulting file size and dimensions.
+- Root editor tests cover 10/50/100/200 KB, matching current root UI buttons. Any other dedicated target-size routes/presets require separate route-level coverage.
+- The repository's `main` tree does not include the audit branch's `tests/target-size.spec.cjs`; these tests currently protect the audit branch, not production `main`.
+
+### Scoped fix and regression plan — not implemented
+1. In production `main`'s target branch, validate the final Blob exists and its measured byte size is at most `selectedTargetKB * 1024` before assigning it as a successful result.
+2. If the target is missed, set `processedBlob = null`, reset the processing button, show a clear failure message, and return without publishing the oversize Blob as the preview/download result. Do not silently claim success. Keep any dimension-reduction fallback intentional and testable.
+3. Ensure exceptions/null results also cannot leave a stale previous Blob downloadable as if it were the latest output.
+4. Correct the PNG test sequence so it truly exercises PNG, and assert the actual format selected at apply time.
+5. Add a passing downscale-to-fit case, an impossible-target case, and an actual downloaded-file size check. Test output sizes at the root page's available presets: 10/50/100/200 KB; test other dedicated routes according to their visible presets.
+6. Make the targeted code change only after explicit user authorization. Then run the target-size regression suite, inspect the actual GitHub Actions run and commit, and verify the resulting file bytes in Chromium. Do not merge or deploy.
+
 ## Start prompt for the next session
 Continue my PixelResize forensic audit from `PROJECT_HANDOFF_2026-10-22.md` in repository https://github.com/shining8090/pixelresize-2.0, branch `seo-tool-logic-fix-2026-10-07`. Read the current handoff first and re-check the branch head and latest GitHub Actions run. The forensic register dated 2026-10-25 is summarized here. The next task is to inspect production target-size output validation and existing regression tests, then propose a minimal scoped fix. Do not edit application code unless I explicitly authorize it. Work one issue at a time: CI → Inspect → Fix confirmed defect → Re-run → Verify → Next task. Never claim PASS without the actual run. Do not merge or deploy without my approval. Final Chromium verification of live production remains required.
