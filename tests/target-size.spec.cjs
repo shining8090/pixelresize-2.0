@@ -200,6 +200,79 @@ test('target-size dimension fallback does not upscale narrow images or distort a
   expect(Math.abs(resizedRatio / originalRatio - 1)).toBeLessThan(0.1);
 });
 
+function makeTextureSvg(width, height, seed) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+    <defs>
+      <filter id="texture">
+        <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="2" seed="${seed}" stitchTiles="stitch"/>
+        <feColorMatrix type="saturate" values="0"/>
+      </filter>
+    </defs>
+    <rect width="${width}" height="${height}" fill="#777777" filter="url(#texture)"/>
+  </svg>`;
+}
+
+for (const shape of [
+  { name: 'narrow-tall', width: 40, height: 16384, seed: 17 },
+  { name: 'wide-short', width: 16384, height: 40, seed: 29 }
+]) {
+  test(`real JPEG target-size output stays under 10 KB and preserves ${shape.name} ratio`, async ({ page }) => {
+    const fixture = makeTextureSvg(shape.width, shape.height, shape.seed);
+    await page.goto('/');
+    await page.locator('#file-input').setInputFiles({
+      name: `${shape.name}.svg`,
+      mimeType: 'image/svg+xml',
+      buffer: Buffer.from(fixture)
+    });
+    await expect(page.locator('#processing-ui')).toBeVisible();
+    await expect(page.locator('#main-preview')).toHaveJSProperty('complete', true);
+    await expect(page.locator('#resize-w')).toHaveValue(String(shape.width));
+    await expect(page.locator('#resize-h')).toHaveValue(String(shape.height));
+
+    await page.locator('.tab-btn[data-tab="convert"]').click();
+    await page.locator('#tab-convert [data-format="image/jpeg"]').click();
+    await page.locator('.tab-btn[data-tab="target"]').click();
+    await page.locator('#tab-target [data-target="10"]').click();
+    await page.locator('#apply-btn').click();
+    await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('#download-btn').click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\.jpg$/i);
+
+    const filePath = await download.path();
+    expect(filePath).toBeTruthy();
+    const fs = require('fs');
+    const output = fs.readFileSync(filePath);
+    expect(output.length).toBeGreaterThan(3);
+    expect(output[0]).toBe(0xff);
+    expect(output[1]).toBe(0xd8);
+    expect(output[2]).toBe(0xff);
+    expect(output.length).toBeLessThanOrEqual(10 * 1024);
+
+    // Decode the actual downloaded bytes. This does not rely on the editor preview.
+    const dimensions = await page.evaluate(async base64 => {
+      const image = new Image();
+      image.src = `data:image/jpeg;base64,${base64}`;
+      await image.decode();
+      return { width: image.naturalWidth, height: image.naturalHeight };
+    }, output.toString('base64'));
+
+    expect(dimensions.width).toBeGreaterThan(0);
+    expect(dimensions.height).toBeGreaterThan(0);
+    expect(dimensions.width).toBeLessThanOrEqual(shape.width);
+    expect(dimensions.height).toBeLessThanOrEqual(shape.height);
+    // These high-entropy fixtures should require dimensions to be reduced
+    // before a 10 KB JPEG target can be reached.
+    expect(dimensions.width < shape.width || dimensions.height < shape.height).toBe(true);
+
+    const sourceRatio = shape.width / shape.height;
+    const outputRatio = dimensions.width / dimensions.height;
+    expect(Math.abs(outputRatio / sourceRatio - 1)).toBeLessThan(0.12);
+  });
+}
+
 test('PNG target-size mode rejects an output that exceeds the selected limit', async ({ page }) => {
   await loadFixture(page);
 
