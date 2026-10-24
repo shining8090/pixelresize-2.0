@@ -150,6 +150,23 @@ Status key: **Confirmed** means established from source, workflow/test configura
 - **Scope:** audit branch only. Production `main` has not been modified, merged or deployed. CI passing is not a substitute for final live Chromium verification.
 - **Next target-size checks:** expand testing from the synthetic encoder scenario to realistic narrow/tall and wide/short image inputs; confirm exact output byte counts and dimensions for reachable and unreachable targets; inspect whether a one-pixel fallback creates expected quality trade-offs. Then continue the prioritized forensic queue. Final Chromium verification of the live site remains required.
 
+### Extreme-aspect-ratio output checks — CI #145 FAIL diagnosed; CI #146 PASS (verified 2026-10-25)
+- **CI #145 — FAIL:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40127686478
+  - Commit: `b5caac3fab0c5abfbae51f1857081ef470b744ca`.
+  - Target-size suite ran 11 tests: 9 passed and 2 failed.
+  - Both failures were in the newly added real-JPEG tests at `tests/target-size.spec.cjs:268`: an assertion required the downloaded dimensions to be smaller than the input dimensions.
+  - The test had assumed that a very narrow/tall or wide/short image could not fit in 10 KB at its original dimensions. Actual Chromium output can already meet the limit without dimension reduction. Thus the failure identified an **overly strict test assumption**, not demonstrated evidence of a compressor defect. Other target-size checks in the same run passed.
+- Test correction commit: `bfa4fe29c96ee77176b356bfcde24ccc90632dc8` — `test: allow extreme images that already fit target size`.
+  - Removed the unconditional expectation that dimensions must shrink.
+  - Kept the real downloaded-file checks: JPEG signature, actual output size ≤ 10 KB, successful decode, dimensions not larger than the source, and aspect-ratio tolerance.
+- **CI #146 — PASS:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40128068421
+  - Exact head SHA: `bfa4fe29c96ee77176b356bfcde24ccc90632dc8`.
+  - Verified result: completed / success; no failed steps.
+  - All configured suites passed: target-size compression, crop/resize, GIF, rotate/flip, JPG/PNG/WebP, AVIF, BMP, privacy/error handling, mobile layout, and route/preset regression.
+- **Interpretation:** the passing test verifies the actual file-size ceiling and preservation of shape for these real outputs; it does not require unnecessary resizing when the file already meets the target. The separate simulated-encoder test still forces a resize pass to test the downscaling fallback.
+- Production `main` remains unchanged. No merge or deploy was performed.
+- Next step: continue the target-size edge-case queue, then review the output-MIME/signature defect as the next distinct issue. Final Chromium verification of the live production site remains mandatory.
+
 ### Confirmed production defect
 In `main/script.js`, when a target is selected:
 - For lossy formats, the code tries to reduce quality, but if no candidate falls under the byte ceiling, `bestBlob` remains null and the fallback encodes at `low` quality.
