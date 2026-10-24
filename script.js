@@ -1418,8 +1418,10 @@ async function encodeTargetSize(canvas, format, targetBytes, startQuality = 0.95
         // using a conservative reduction so we retain more pixels between passes.
         const ratio = Math.sqrt(targetBytes / Math.max(minimumQualityBlob.size, 1));
         const scale = Math.max(0.1, Math.min(0.95, ratio * 0.98));
-        const nextWidth = Math.max(64, Math.floor(width * scale));
-        const nextHeight = Math.max(64, Math.floor(height * scale));
+        // Only downscale dimensions. A 64px minimum can enlarge a narrow side
+        // (for example, 40px -> 64px) and distort the source aspect ratio.
+        const nextWidth = Math.max(1, Math.floor(width * scale));
+        const nextHeight = Math.max(1, Math.floor(height * scale));
 
         if (nextWidth >= width && nextHeight >= height) break;
 

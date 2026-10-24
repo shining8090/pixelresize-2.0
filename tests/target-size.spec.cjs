@@ -11,6 +11,15 @@ const fixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height=
   <circle cx="600" cy="400" r="180" fill="#fef3c7"/>
 </svg>`;
 
+const narrowFixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="2000" viewBox="0 0 40 2000">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#124f8a"/><stop offset="1" stop-color="#f2a65a"/></linearGradient>
+    <pattern id="p" width="4" height="13" patternUnits="userSpaceOnUse"><rect width="2" height="13" fill="#ffffff" fill-opacity=".55"/></pattern>
+  </defs>
+  <rect width="40" height="2000" fill="url(#g)"/>
+  <rect width="40" height="2000" fill="url(#p)"/>
+</svg>`;
+
 async function loadFixture(page) {
   await page.goto('/');
   await page.locator('#file-input').setInputFiles({
@@ -20,6 +29,19 @@ async function loadFixture(page) {
   });
   await expect(page.locator('#processing-ui')).toBeVisible();
   await expect(page.locator('#main-preview')).toHaveJSProperty('complete', true);
+}
+
+async function loadNarrowFixture(page) {
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'narrow-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(narrowFixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await expect(page.locator('#main-preview')).toHaveJSProperty('complete', true);
+  await expect(page.locator('#resize-w')).toHaveValue('40');
+  await expect(page.locator('#resize-h')).toHaveValue('2000');
 }
 
 for (const targetKB of [10, 50, 100, 200]) {
@@ -139,6 +161,43 @@ test('failed target-size reprocessing invalidates a previous download', async ({
   await page.locator('#download-btn').click();
   await page.waitForTimeout(200);
   expect(downloaded, 'a failed second attempt must not download a stale previous result').toBe(false);
+});
+
+test('target-size dimension fallback does not upscale narrow images or distort aspect ratio', async ({ page }) => {
+  await loadNarrowFixture(page);
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/jpeg"]').click();
+  await page.locator('.tab-btn[data-tab="target"]').click();
+  await page.locator('#tab-target [data-target="10"]').click();
+
+  // Simulate a target that cannot be met at the source dimensions but can be
+  // met after one dimension-reduction pass. Record the actual canvas dimensions
+  // supplied to the encoder so this regression tests the fallback algorithm.
+  await page.evaluate(() => {
+    window.__targetSizeEncodeDimensions = [];
+    HTMLCanvasElement.prototype.toBlob = function (callback, type, quality) {
+      window.__targetSizeEncodeDimensions.push({
+        width: this.width,
+        height: this.height,
+        quality
+      });
+      const bytes = this.width === 40 && this.height === 2000 ? 12 * 1024 : 8 * 1024;
+      callback(new Blob([new Uint8Array(bytes)], { type: type || 'image/jpeg' }));
+    };
+  });
+
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  const calls = await page.evaluate(() => window.__targetSizeEncodeDimensions);
+  const resized = calls.find(item => item.width !== 40 || item.height !== 2000);
+  expect(resized, 'encoder should receive a reduced canvas after the initial over-limit result').toBeTruthy();
+  expect(resized.width).toBeLessThan(40);
+  expect(resized.height).toBeLessThan(2000);
+
+  const originalRatio = 40 / 2000;
+  const resizedRatio = resized.width / resized.height;
+  expect(Math.abs(resizedRatio / originalRatio - 1)).toBeLessThan(0.1);
 });
 
 test('PNG target-size mode rejects an output that exceeds the selected limit', async ({ page }) => {
