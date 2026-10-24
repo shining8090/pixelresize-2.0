@@ -1582,12 +1582,24 @@ async function applyChanges() {
         if (!processedBlob) throw new Error('Image processing failed.');
     }
 
-    // Never silently accept the browser's PNG fallback for an AVIF request.
-    // The actual Blob MIME type is the source of truth for the exported format.
-    if (format === 'image/avif' && processedBlob?.type !== 'image/avif') {
+    // Validate the actual encoded Blob before reporting success. Canvas APIs may
+    // silently return PNG when a requested encoder is unsupported. The filename
+    // follows Blob.type, so accepting a fallback here would violate the selected
+    // format even if the eventual download extension looked internally consistent.
+    if (!processedBlob || processedBlob.type !== format) {
+        const formatNames = {
+            'image/jpeg': 'JPG',
+            'image/png': 'PNG',
+            'image/webp': 'WebP',
+            'image/avif': 'AVIF',
+            'image/gif': 'GIF',
+            'image/bmp': 'BMP'
+        };
+        const requestedName = formatNames[format] || format;
+        const actualName = formatNames[processedBlob?.type] || processedBlob?.type || 'unknown';
         processedBlob = null;
         applyBtn.textContent = 'Apply Changes';
-        alert('AVIF export is not supported by this browser. Please try a browser with AVIF canvas export support. No PNG file was substituted.');
+        alert(`Selected ${requestedName} export could not be produced because the encoder returned ${actualName}. No incorrectly formatted file was created.`);
         return;
     }
 

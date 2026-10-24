@@ -335,3 +335,39 @@ test('WebP conversion preserves transparent pixels in the downloaded image', asy
   expect(pixels.foreground[3]).toBeGreaterThan(240);
   expect(pageErrors).toEqual([]);
 });
+
+test('conversion refuses a PNG fallback when JPG is selected', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'mime-fallback-fixture.svg',
+    mimeType: 'image/svg+xml',
+    buffer: Buffer.from(fixtureSvg)
+  });
+  await expect(page.locator('#processing-ui')).toBeVisible();
+  await expect(page.locator('#main-preview')).toHaveJSProperty('complete', true);
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/jpeg"]').click();
+
+  // Simulate a browser encoder that silently returns PNG for a JPG request.
+  await page.evaluate(() => {
+    window.__auditAlertMessage = '';
+    window.alert = message => { window.__auditAlertMessage = String(message); };
+    HTMLCanvasElement.prototype.toBlob = function (callback) {
+      callback(new Blob([
+        new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+      ], { type: 'image/png' }));
+    };
+  });
+
+  await page.locator('#apply-btn').click();
+  await expect.poll(() => page.evaluate(() => window.__auditAlertMessage))
+    .toMatch(/Selected JPG export could not be produced because the encoder returned PNG/i);
+  await expect(page.locator('#apply-btn')).toHaveText('Apply Changes');
+
+  let downloaded = false;
+  page.once('download', () => { downloaded = true; });
+  await page.locator('#download-btn').click();
+  await page.waitForTimeout(200);
+  expect(downloaded, 'a mismatched PNG fallback must not be offered as a successful JPG conversion').toBe(false);
+});
+
