@@ -168,7 +168,7 @@ test('dedicated GIF tool route loads its encoder and downloads a valid GIF', asy
   page.on('pageerror', error => pageErrors.push(error.message));
 
   await page.goto('/tools/to-gif/');
-  await expect(page).toHaveURL(/\\/tools\\/to-gif\\/$/);
+  await expect(page).toHaveURL(new RegExp('/tools/to-gif/$'))
   await expect(page.locator('script[src="/gif-encoder.js"]')).toHaveCount(1);
   await expect.poll(() => page.evaluate(() => typeof window.GifWriter)).toBe('function');
 
@@ -188,7 +188,7 @@ test('dedicated GIF tool route loads its encoder and downloads a valid GIF', asy
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#download-btn').click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/\\.gif$/i);
+  expect(download.suggestedFilename().toLowerCase().endsWith('.gif')).toBe(true);
 
   const filePath = await download.path();
   expect(filePath).toBeTruthy();
