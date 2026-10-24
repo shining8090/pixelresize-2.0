@@ -105,6 +105,42 @@ test('unreachable target size reports failure and does not offer a download', as
   expect(downloaded, 'an over-limit output must not be downloadable as a successful result').toBe(false);
 });
 
+test('failed target-size reprocessing invalidates a previous download', async ({ page }) => {
+  await loadFixture(page);
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/jpeg"]').click();
+  await page.locator('.tab-btn[data-tab="target"]').click();
+  await page.locator('#tab-target [data-target="200"]').click();
+
+  // First create a valid result so this checks stale-output handling.
+  await page.locator('#apply-btn').click();
+  await expect(page.locator('#apply-btn')).toHaveText('Applied!', { timeout: 30000 });
+
+  // Now force the next encode attempt to be impossible for the 10 KB limit.
+  await page.locator('.tab-btn[data-tab="target"]').click();
+  await page.locator('#tab-target [data-target="10"]').click();
+  await page.evaluate(() => {
+    HTMLCanvasElement.prototype.toBlob = function (callback, type) {
+      callback(new Blob([new Uint8Array(12 * 1024)], { type: type || 'image/jpeg' }));
+    };
+  });
+
+  let dialogMessage = '';
+  page.once('dialog', async dialog => {
+    dialogMessage = dialog.message();
+    await dialog.accept();
+  });
+  await page.locator('#apply-btn').click();
+  await expect.poll(() => dialogMessage).toMatch(/Could not reach the selected 10 KB limit/i);
+  await expect(page.locator('#apply-btn')).toHaveText('Apply Changes');
+
+  let downloaded = false;
+  page.once('download', () => { downloaded = true; });
+  await page.locator('#download-btn').click();
+  await page.waitForTimeout(200);
+  expect(downloaded, 'a failed second attempt must not download a stale previous result').toBe(false);
+});
+
 test('PNG target-size mode rejects an output that exceeds the selected limit', async ({ page }) => {
   await loadFixture(page);
 
