@@ -140,6 +140,16 @@ Status key: **Confirmed** means established from source, workflow/test configura
 - **Scope/limitation:** this implementation and CI are on the audit branch only. Production `main` remains at `1ce139238822e50940172a96897dbd4e6a9c02bd` and is not fixed by this commit. CI success does not mean the change is merged, deployed, or verified on live production.
 - Next target-size follow-up: exercise more real browser inputs across the actual visible 10/50/100/200 KB root-editor presets; test edge dimensions and impossible targets; inspect whether the dimension-reduction algorithm preserves aspect ratio on tiny sides; verify the downloaded output size in Chromium. Do not merge/deploy without approval.
 
+### Narrow-image aspect-ratio fallback — CI #144 PASS (verified 2026-10-25)
+- Commit: `ca26719063787e610933b1d332882354edb9336c` — `fix: preserve aspect ratio for narrow target-size images`.
+- CI run #144: https://github.com/shining8090/pixelresize-2.0/actions/runs/40126363522
+- Verified actual run result: `completed` / `success`; exact run head SHA matches the commit above.
+- All configured browser regression suites passed with no failed steps, including the target-size suite and existing crop/resize, GIF, rotate/flip, JPG/PNG/WebP, AVIF, BMP, privacy/error handling, mobile layout and route/preset suites.
+- The target-size downscaling fallback no longer enforces a 64-pixel minimum per side. It uses a 1-pixel minimum to avoid enlarging narrow images during compression.
+- Added a Playwright regression case using a 40 × 2,000-pixel image; it records encoder canvas dimensions and checks that a reduction pass does not enlarge the narrow side and that the aspect ratio remains within the test tolerance.
+- **Scope:** audit branch only. Production `main` has not been modified, merged or deployed. CI passing is not a substitute for final live Chromium verification.
+- **Next target-size checks:** expand testing from the synthetic encoder scenario to realistic narrow/tall and wide/short image inputs; confirm exact output byte counts and dimensions for reachable and unreachable targets; inspect whether a one-pixel fallback creates expected quality trade-offs. Then continue the prioritized forensic queue. Final Chromium verification of the live site remains required.
+
 ### Confirmed production defect
 In `main/script.js`, when a target is selected:
 - For lossy formats, the code tries to reduce quality, but if no candidate falls under the byte ceiling, `bestBlob` remains null and the fallback encodes at `low` quality.
