@@ -107,10 +107,14 @@ test('unreachable target size reports failure and does not offer a download', as
 
 test('PNG target-size mode rejects an output that exceeds the selected limit', async ({ page }) => {
   await loadFixture(page);
-  await page.locator('.tab-btn[data-tab="convert"]').click();
-  await page.locator('#tab-convert [data-format="image/png"]').click();
+
+  // Selecting a target preset automatically selects JPEG. Select the target
+  // first, then explicitly switch back to PNG so this tests the non-quality path.
   await page.locator('.tab-btn[data-tab="target"]').click();
   await page.locator('#tab-target [data-target="10"]').click();
+  await page.locator('.tab-btn[data-tab="convert"]').click();
+  await page.locator('#tab-convert [data-format="image/png"]').click();
+  await expect(page.locator('#tab-convert [data-format="image/png"]')).toHaveClass(/active/);
 
   // PNG encoders ignore the quality argument; simulate the browser returning
   // an output larger than 10 KB so the non-quality target path is covered.
@@ -136,7 +140,7 @@ test('PNG target-size mode rejects an output that exceeds the selected limit', a
   expect(downloaded, 'an over-limit PNG must not be downloadable as a successful result').toBe(false);
 });
 
-test('target-size resizing keeps dimensions within the target after repeated encoder misses', async ({ page }) => {
+test('unreachable target reports failure after repeated encoder misses', async ({ page }) => {
   await loadFixture(page);
   await page.locator('.tab-btn[data-tab="convert"]').click();
   await page.locator('#tab-convert [data-format="image/jpeg"]').click();
