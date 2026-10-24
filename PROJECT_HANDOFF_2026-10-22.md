@@ -127,6 +127,19 @@ Status key: **Confirmed** means established from source, workflow/test configura
 - This is a passing test commit only; it does **not** fix the confirmed over-limit success bug in production `main` and does not itself prove the full audit is complete.
 - At this point the audit branch head is expected to include this commit; re-check it before another write.
 
+### Target-size guard — implemented on audit branch; CI #143 PASS (verified 2026-10-25)
+- Code commit: `99f0cd0ec02b8115230e6c1a238093ff110e18c0` — `fix: enforce target-size output before download`.
+- Regression-test commit: `5e1b3d38dce52a4713a064cf69a4378e764d86e9` — `test: prevent stale downloads after target failure`.
+- CI run #142 for the code-only commit was cancelled by the subsequent test commit; do not describe #142 as a pass.
+- **CI #143 — PASS:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40125707681
+- Verified status: completed / success on exact head commit `5e1b3d38dce52a4713a064cf69a4378e764d86e9`. The job has no failed steps. All configured suites passed: target-size, crop/resize, GIF, rotate/flip, JPG/PNG/WebP, AVIF, BMP, privacy/error handling, mobile layout, and route/preset tests.
+- Code changes on audit branch:
+  - Clear `processedBlob` at the start of a new processing attempt so an unsuccessful reprocessing attempt cannot leave an old result available for download.
+  - Compare the measured target output Blob size against `selectedTargetKB * 1024` at the UI boundary; an oversized result clears the download candidate, resets the Apply button, reports failure and returns before success flow.
+  - Add a regression test that first creates a valid 200 KB result and then simulates an over-limit 10 KB result, verifying that the stale former result cannot still be downloaded.
+- **Scope/limitation:** this implementation and CI are on the audit branch only. Production `main` remains at `1ce139238822e50940172a96897dbd4e6a9c02bd` and is not fixed by this commit. CI success does not mean the change is merged, deployed, or verified on live production.
+- Next target-size follow-up: exercise more real browser inputs across the actual visible 10/50/100/200 KB root-editor presets; test edge dimensions and impossible targets; inspect whether the dimension-reduction algorithm preserves aspect ratio on tiny sides; verify the downloaded output size in Chromium. Do not merge/deploy without approval.
+
 ### Confirmed production defect
 In `main/script.js`, when a target is selected:
 - For lossy formats, the code tries to reduce quality, but if no candidate falls under the byte ceiling, `bestBlob` remains null and the fallback encodes at `low` quality.
