@@ -17,6 +17,7 @@ const SEO_DATA = {
         faq: [
             { q: 'How to resize an image online?', a: 'Simply drag your image into our upload zone, choose the "Resize" tool, enter your desired width, and click process. Then download your new image!' },
             { q: 'Is PixelResize free?', a: 'Yes, all our tools are 100% free with no hidden subscriptions or limits on file quantity.' },
+            { q: 'Can I resize multiple images?', a: 'Not yet. The current editor processes one image at a time. Select or drop one image, edit and download it, then repeat for the next image.' },
             { q: 'Are my images safe?', a: 'Absolutely. PixelResize is 100% private. We use client-side technology, meaning your images are never uploaded to any server. Your privacy is guaranteed by design.' }
         ]
     },
