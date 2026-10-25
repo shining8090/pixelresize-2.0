@@ -731,6 +731,15 @@ function setupEventListeners() {
 
 async function handleFiles(files) {
     if (!files || files.length === 0) return;
+
+    // The editor currently supports one image per session, not batch processing.
+    // Reject multi-file drops instead of silently processing only the first file.
+    if (files.length > 1) {
+        fileInput.value = '';
+        alert('Please select or drop one image at a time. Batch processing is not supported yet.');
+        return;
+    }
+
     let file = files[0];
 
     // Guard against unusually large uploads that can exhaust browser memory.

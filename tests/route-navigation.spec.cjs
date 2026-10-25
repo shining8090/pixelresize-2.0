@@ -280,3 +280,40 @@ test('Chromium homepage and image-editor smoke test has no browser errors', asyn
   expect(browserErrors, 'Chromium should not report uncaught page errors or console errors during initial load and image-editor startup').toEqual([]);
 });
 
+test('homepage documents one-image editing and rejects multiple dropped files', async ({ page }) => {
+  await page.goto('/');
+
+  const fileInput = page.locator('#file-input');
+  await expect(fileInput).not.toHaveAttribute('multiple', '');
+  await expect(fileInput).toHaveAttribute('title', 'Upload one image');
+
+  const multiImageAnswer = page.locator('#faq .faq-item')
+    .filter({ hasText: 'Can I resize multiple images?' })
+    .locator('.faq-answer');
+  await expect(multiImageAnswer).toContainText('Not yet');
+  await expect(multiImageAnswer).toContainText('one image at a time');
+
+  await page.evaluate(({ firstSvg, secondSvg }) => {
+    window.__auditAlertMessage = '';
+    window.alert = message => { window.__auditAlertMessage = String(message); };
+
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([firstSvg], 'first-image.svg', { type: 'image/svg+xml' }));
+    transfer.items.add(new File([secondSvg], 'second-image.svg', { type: 'image/svg+xml' }));
+
+    document.querySelector('#upload-zone').dispatchEvent(new DragEvent('drop', {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer: transfer
+    }));
+  }, {
+    firstSvg: fixtureSvg,
+    secondSvg: fixtureSvg.replace('320', '321')
+  });
+
+  await expect.poll(() => page.evaluate(() => window.__auditAlertMessage))
+    .toMatch(/select or drop one image at a time.*batch processing is not supported yet/i);
+  await expect(page.locator('#upload-zone')).toBeVisible();
+  await expect(page.locator('#processing-ui')).toBeHidden();
+});
+
