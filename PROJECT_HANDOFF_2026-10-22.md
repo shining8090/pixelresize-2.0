@@ -31,6 +31,24 @@ Continue the existing PixelResize deep forensic audit. Do not restart the audit 
 - Preserve the 50 MB input cap and 16,384-pixel / 40-million-pixel output safeguards unless a confirmed reason justifies a change.
 
 ## Latest confirmed CI status
+- **CI #151 — PASS:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40223660404
+  - Exact workflow head SHA: `81a9ae3ed6606cae9b9444accbde928823398fa9` — `fix: include single-image guidance in dynamic FAQ`.
+  - Verified actual run status: completed / success; no failed job steps. All configured suites passed, including the homepage multi-file policy regression in route/navigation. That suite reports **26 passed**.
+  - Other passing suite totals recorded in the job logs include 11 target-size, 7 crop/resize, 4 GIF, 5 transform, 9 standard-format conversion, 3 AVIF, 3 BMP, 9 privacy/error, and 7 mobile-layout tests.
+  - The new test verifies the file input is single-image, the runtime-generated FAQ clearly says batch processing is not supported yet, and dropping two files shows a rejection message without opening the editor.
+- **CI #150 — FAIL, diagnosed:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40223360472
+  - Initial scoped code/test commit: `7324a736798a86ab304d2f6ce48039288f365991`.
+  - All suites before route/navigation passed. In route/navigation, 25 existing tests passed and the new test failed because `script.js` replaces the static FAQ with `SEO_DATA.home.faq`, which did not contain the multi-image question; the expected answer therefore was not present in the runtime DOM.
+  - Fixed by adding the accurate one-image-at-a-time answer to the dynamic FAQ list as well as the static HTML; CI #151 passed on the resulting exact commit.
+- **CI #149 — PASS:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40129651356
+  - Exact workflow head SHA: `2c386543ee306b4a7252b6f244ce42d9a068d862`; verified completed / success.
+  - The dedicated GIF route regression verified encoder loading, valid GIF signature, successful decode to 320×240, and expected pixel content.
+- **CI #148 — FAIL, diagnosed as a new test syntax error:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40129491903
+  - The dedicated GIF route test did not parse due to an incorrectly escaped URL regular expression. The assertion was corrected in commit `2c386543ee306b4a7252b6f244ce42d9a068d862`, and CI #149 passed.
+- **CI #147 — PASS:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40128793555
+  - Application-code commit: `cffdf1ae6f30c6316a1dabe042906244655b3208` — `fix: reject image format encoder fallbacks`.
+  - Added a regression test that simulates a JPG request receiving a PNG Blob; the app refuses success and does not permit a download candidate for the wrong MIME type.
+- Scope of CI #147, #149 and #151 changes: **audit branch only**. Production `main` remains at `1ce139238822e50940172a96897dbd4e6a9c02bd`; no merge or deployment was performed.
 - **CI #149 — PASS:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40129651356
   - Exact workflow head SHA: `2c386543ee306b4a7252b6f244ce42d9a068d862` — `test: fix dedicated GIF route assertions`.
   - Verified actual run status: completed / success. All configured suites passed, including the expanded GIF conversion suite and route/preset suite.
@@ -68,7 +86,7 @@ Status key: **Confirmed** means established from source, workflow/test configura
 | P1 | JPEG transparency may export with black background | Confirmed defect in `main`; regression caught by CI #125. Commit `e1c36f25` adds white-background compositing; CI #126 passed on audit branch. | Isolate the minimal fix and its regression test. Verify actual downloaded JPG pixels in Chromium on the intended production candidate. |
 | P1 | Selected output format may not match actual output bytes | Confirmed production `main` source risk: it does not validate the returned Blob MIME. Audit branch now validates `Blob.type` against the requested MIME and CI #147 passes a simulated JPG→PNG fallback regression. Conversion tests inspect actual file signatures for standard formats plus AVIF/BMP. Runtime code validates MIME, not every output's byte signature. | Keep production and audit branch separate. Expand signature verification where format coverage is missing; test actual downloads and dedicated routes in Chromium. Do not merge/deploy yet. |
 | P1 | Dedicated GIF tool route omitted its encoder | Confirmed source defect: `tools/to-gif/index.html` loaded `/script.js` but did not load `/gif-encoder.js`, while shared code requires the global `GifWriter`; this was true on production `main` and the audit branch before the fix. Audit branch now loads `/gif-encoder.js` before `/script.js` and has a route-specific Playwright test validating the encoder, downloaded GIF signature, decode, dimensions and expected pixels; CI #149 passes. Production `main` is unchanged. | Keep the route-level regression and verify the dedicated GIF route during final live-production Chromium testing. Do not merge/deploy without approval. |
-| P1 | Multi-file selection does not equal batch processing | Confirmed production source mismatch: homepage input allows `multiple`, but `handleFiles(files)` processes only `files[0]`; no complete multi-result/download queue exists. Some copy implies one-image-at-a-time while other UI suggests bulk operation. | Decide explicitly: implement full batch results/download/error handling, or remove `multiple` and bulk-support claims consistently. |
+| P1 | Production main's multi-select accepts more files than its editor processes | Confirmed on production `main`: file input has `multiple`, while `handleFiles(files)` uses only `files[0]` and no batch results/download queue exists. The audit branch now consistently chooses the single-image model: no multiple-select attribute, one-image copy, accurate static and dynamic FAQ, plus a multi-drop guard and Playwright test; CI #151 passes. Production is unchanged. | Review this focused fix for future production adoption and verify behavior on live production during final Chromium checks. Do not merge/deploy without explicit approval. |
 | P1 | Security policy is permissive; deployment does not configure response headers | Confirmed configuration weakness: CSP includes broad `https:`, `unsafe-inline` and `unsafe-eval`; meta `X-Frame-Options` / `X-Content-Type-Options` do not substitute for HTTP response headers. The deployment workflow uploads static files and has no custom-header setup. Actual live response headers were not verified. | Measure real live response headers using Chromium/network tools first. Then design a supported header approach and tighten CSP incrementally with regression tests. Do not claim production headers are missing until measured. |
 | P1 | Keyboard-accessibility gaps in editor controls | Confirmed source gap: crop handles are non-focusable `div` elements with pointer-based controls; the mobile menu checkbox is hidden with `display:none` while a label serves as the visible trigger. | Make crop and navigation controls keyboard-operable, with visible focus and appropriate labels/announcements. Test keyboard paths and screen-reader behavior. |
 | P1 | Some text/control colors fail common contrast thresholds | Contrast calculated from stylesheet values: `#647FBC` on white ≈ 3.96:1; white on `#647FBC` ≈ 3.96:1; `#94B8A3` on white ≈ 2.18:1; `#A2BDF2` on white ≈ 1.89:1. Normal text generally needs 4.5:1 and large text 3:1. This is source color math, not a full rendered-page scan. | Review and darken insufficient colors as needed; run a complete contrast check over rendered routes and states. |
@@ -91,7 +109,7 @@ Status key: **Confirmed** means established from source, workflow/test configura
 - Production target-size flow does not validate the final Blob byte size against the requested ceiling.
 - Production conversion does not validate the actual returned Blob MIME before success/download.
 - Audit-branch dedicated GIF page has an encoder wiring gap relative to shared script expectations.
-- Multi-file input and first-file-only processing conflict.
+- Production `main` has a multiple-file input but processes only the first; the audit branch now rejects multiple drops and documents one-image-at-a-time behavior (CI #151 PASS). Live production is unchanged.
 - Canonical/sitemap format mismatches and production `/blog.html` omission.
 - Source accessibility gaps for crop handles, labels and mobile navigation.
 - Contrast ratios calculated from source colors.
@@ -111,7 +129,7 @@ Status key: **Confirmed** means established from source, workflow/test configura
 ## Required next actions (one logical task at a time)
 1. Inspect and isolate the **production target-size output validation** issue and the exact tests already present. Define a scoped change and regression cases before editing application code.
 2. Only with explicit authorization, make the targeted fix on the audit branch; run the relevant tests and verify the actual GitHub Actions run/commit. Do not touch production `main`.
-3. Continue the prioritized P1 items, one at a time: multi-file behavior decision, security headers/CSP evidence, accessibility and contrast. Output MIME validation and the dedicated GIF route encoder have fixes on the audit branch; actual live-production verification remains pending.
+3. Continue the remaining prioritized P1 items, one at a time: security headers/CSP evidence, accessibility and contrast. The multi-file mismatch, output MIME guard and dedicated GIF route encoder have focused fixes on the audit branch; production `main` is unchanged and live-production verification remains pending.
 4. Continue SEO route/canonical/sitemap checks, then privacy and dependency checks.
 5. After audit fixes are complete, perform the required final Chromium pass against **live production separately from the audit branch**. Do not call the site audited or production-ready before this is done.
 6. No merge or deployment without explicit approval.
@@ -184,7 +202,7 @@ Status key: **Confirmed** means established from source, workflow/test configura
   - All configured suites passed: target-size compression, crop/resize, GIF, rotate/flip, JPG/PNG/WebP, AVIF, BMP, privacy/error handling, mobile layout, and route/preset regression.
 - **Interpretation:** the passing test verifies the actual file-size ceiling and preservation of shape for these real outputs; it does not require unnecessary resizing when the file already meets the target. The separate simulated-encoder test still forces a resize pass to test the downscaling fallback.
 - Production `main` remains unchanged. No merge or deploy was performed.
-- Follow-up: continue target-size edge cases as separate checks if needed. Dedicated GIF route encoder loading is now fixed and tested on the audit branch (CI #149 PASS). The next distinct audit item is the multi-file-selection versus first-file-only-processing mismatch. Final Chromium verification of live production remains mandatory.
+- Follow-up: continue target-size edge cases as separate checks if needed. Dedicated GIF route encoder loading is fixed/tested on the audit branch (CI #149 PASS), and the multi-file selection mismatch is addressed on the audit branch (CI #151 PASS). The next distinct audit item is the security-header/CSP evidence check. Final Chromium verification of live production remains mandatory.
 
 
 ### Output MIME validation — CI #147 PASS (verified 2026-10-25)
@@ -197,7 +215,25 @@ Status key: **Confirmed** means established from source, workflow/test configura
 - Existing conversion tests also verify actual file signatures for standard JPG/PNG/WebP, AVIF, and BMP outputs. **Limit:** the new runtime guard validates MIME, not byte signatures for every output. Tests and the final live Chromium pass must continue checking downloaded bytes.
 - **Scope:** audit branch only. Production `main` remains at `1ce139238822e50940172a96897dbd4e6a9c02bd`; nothing was merged or deployed.
 - **Dedicated GIF route result:** the absolute `/gif-encoder.js` include and route-level browser regression are in place on the audit branch; CI #149 passed. The first CI run (#148) failed from test regex syntax, not app behavior; the test was corrected and rerun. Production `main` is still unchanged.
-- **Next task:** decide and document the multi-file behavior requirement (the current input allows multiple files but the handler processes only the first). Then continue remaining P1 items. Final Chromium verification of live production remains mandatory.
+- **Multi-file result:** the audit branch now enforces a clear one-image-at-a-time policy and rejects multi-file drops; CI #151 passed. Production `main` remains unchanged.
+- **Next task:** inspect live production response security headers and CSP with read-only Chromium/network evidence, then continue the remaining P1 items. Final Chromium verification of live production remains mandatory.
+
+
+### Multi-file upload behavior — CI #150 FAIL diagnosed; CI #151 PASS (verified 2026-10-25)
+- **Production source mismatch:** production `main/index.html` has `multiple` on `#file-input` and the upload heading invites users to choose images, but production `main/script.js` assigns only `files[0]` in `handleFiles(files)`. There is no batch-processing result queue. Selecting multiple images can therefore silently discard all but the first in that editor.
+- **Behavior decision for the audit branch:** keep the existing editor single-image-only rather than expanding scope into full batch editing/download/error management. The audit branch already had a single-image file input, but its step copy and FAQ needed to make the policy clear and drag/drop needed to reject multiple files instead of silently processing the first.
+- **Audit-branch changes in commit `7324a736798a86ab304d2f6ce48039288f365991`:**
+  - Added a guard in `handleFiles(files)` that shows a clear message and returns when more than one file is supplied; clears the file input so the user can retry. It does not start processing the first file.
+  - Updated the how-it-works text to say “Select an Image” / “upload one image”.
+  - Changed the static FAQ response to say batch processing is not supported yet and describe the one-image workflow.
+  - Added a Playwright route/navigation test with a two-file `DataTransfer` drop; checks the single-image input, message, and that the editor does not open.
+- **CI #150 — FAIL diagnosed:** the application guard and copy were included, but the new test could not find the FAQ answer in the runtime DOM. The script dynamically replaces the static FAQ from `SEO_DATA.home.faq`, and that dynamic array did not include the multi-image question. 25 existing route/navigation tests passed; the single new test failed at the FAQ assertion.
+- **Follow-up fix in commit `81a9ae3ed6606cae9b9444accbde928823398fa9`:** added the same clear one-image policy to `SEO_DATA.home.faq`, ensuring the question is visible after page startup and in generated FAQ schema.
+- **CI #151 — PASS:** https://github.com/shining8090/pixelresize-2.0/actions/runs/40223660404
+  - Verified completed / success on exact head SHA `81a9ae3ed6606cae9b9444accbde928823398fa9`.
+  - All configured suites passed; route/navigation reports 26 passed, including the new multi-file-drop case.
+- **Scope:** audit branch only. Production `main` remains at `1ce139238822e50940172a96897dbd4e6a9c02bd`; no merge or deployment occurred. When considering production adoption, keep the change scoped and verify live behavior in Chromium.
+- **Next task:** inspect live production response security headers and the current Content Security Policy (CSP) using read-only network/Chromium evidence. Distinguish meta policy from actual response headers. Do not claim a header is missing until the live response is measured.
 
 ### Confirmed production defect
 In `main/script.js`, when a target is selected:
@@ -229,4 +265,4 @@ Audit branch `encodeTargetSize()` returns a `fitsTarget` result, and `applyChang
 6. Make the targeted code change only after explicit user authorization. Then run the target-size regression suite, inspect the actual GitHub Actions run and commit, and verify the resulting file bytes in Chromium. Do not merge or deploy.
 
 ## Start prompt for the next session
-Continue my PixelResize forensic audit from `PROJECT_HANDOFF_2026-10-22.md` in repository https://github.com/shining8090/pixelresize-2.0, branch `seo-tool-logic-fix-2026-10-07`. Read the current handoff first and re-check the branch head and latest GitHub Actions run. The forensic register dated 2026-10-25 is summarized here. The last completed audit items are output MIME validation (CI #147 PASS) and the dedicated GIF encoder include + route-level test (CI #149 PASS), both audit-branch-only. The next task is to resolve the multi-file-selection versus first-file-only-processing mismatch, starting with an evidence-based behavior decision. Do not merge or deploy without explicit approval. Work one issue at a time: CI → Inspect → Fix confirmed defect → Re-run → Verify → Next task. Never claim PASS without the actual run. Do not merge or deploy without my approval. Final Chromium verification of live production remains required.
+Continue my PixelResize forensic audit from `PROJECT_HANDOFF_2026-10-22.md` in repository https://github.com/shining8090/pixelresize-2.0, branch `seo-tool-logic-fix-2026-10-07`. Read the current handoff first and re-check the branch head and latest GitHub Actions run. The forensic register dated 2026-10-25 is summarized here. The last completed audit items are output MIME validation (CI #147 PASS), dedicated GIF encoder include + route-level test (CI #149 PASS), and single-image policy guard/FAQ + multi-drop regression (CI #151 PASS), all audit-branch-only. The next task is to inspect live production response security headers and CSP with read-only Chromium/network evidence. Do not merge or deploy without explicit approval. Work one issue at a time: CI → Inspect → Fix confirmed defect → Re-run → Verify → Next task. Never claim PASS without the actual run. Do not merge or deploy without my approval. Final Chromium verification of live production remains required.
