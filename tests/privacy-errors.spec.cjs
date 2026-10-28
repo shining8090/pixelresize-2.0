@@ -163,6 +163,43 @@ test('HEIC conversion failure restores the apply button and reports an error', a
   await expect(page.locator('#processing-ui')).toBeHidden();
 });
 
+test('dedicated HEIC route allows the blob workers required by the converter', async ({ page }) => {
+  await page.goto('/heic-to-jpg/');
+
+  const policy = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
+  expect(policy).toMatch(/worker-src\\s+[^;]*\\bblob:/);
+});
+
+test('clicking the HEIC tool opens the file chooser from the user action', async ({ page }) => {
+  await page.route('https://cdn.jsdelivr.net/npm/heic2any@0.0.3/dist/heic2any.min.js', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: 'window.heic2any = async () => { throw new Error("simulated HEIC conversion failure"); };'
+    })
+  );
+
+  await page.goto('/');
+  let dialogMessage = '';
+  page.once('dialog', async dialog => {
+    dialogMessage = dialog.message();
+    await dialog.accept();
+  });
+
+  const chooserPromise = page.waitForEvent('filechooser');
+  await page.locator('[data-tool="heic-to-jpg"]').first().click();
+  const chooser = await chooserPromise;
+  await chooser.setFiles({
+    name: 'broken-photo.heic',
+    mimeType: 'image/heic',
+    buffer: Buffer.from('invalid HEIC fixture')
+  });
+
+  await expect.poll(() => dialogMessage).toContain('Failed to convert HEIC image.');
+  await expect(page.locator('#upload-zone')).toBeVisible();
+  await expect(page.locator('#processing-ui')).toBeHidden();
+});
+
 test('oversized image uploads are rejected before processing', async ({ page }) => {
   await page.goto('/');
   let dialogMessage = '';

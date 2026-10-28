@@ -7,6 +7,7 @@ on:
     paths:
       - 'script.js'
       - 'index.html'
+      - 'heic-to-jpg/index.html'
       - 'style.css'
       - 'tests/**'
       - 'playwright.config.cjs'
@@ -27,6 +28,7 @@ on:
           - avif-convert
           - bmp-convert
           - privacy-errors
+          - heic-convert
           - mobile-layout
           - route-navigation
         default: all
@@ -114,6 +116,10 @@ jobs:
       - name: Run privacy and error-handling regression
         if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'privacy-errors'
         run: npx playwright test tests/privacy-errors.spec.cjs --reporter=line
+
+      - name: Run HEIC conversion and picker regression
+        if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'heic-convert'
+        run: npx playwright test tests/privacy-errors.spec.cjs --grep 'HEIC|HEIC tool|dedicated HEIC' --reporter=line
 
       - name: Run mobile layout regression
         if: github.event_name == 'push' || inputs.test_suite == 'all' || inputs.test_suite == 'mobile-layout'

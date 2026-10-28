@@ -453,7 +453,7 @@ function handleInitialRoute() {
         let cleanTool = toolParam;
         if (cleanTool.startsWith('/tools/')) cleanTool = cleanTool.replace('/tools/', '');
         if (cleanTool.startsWith('/')) cleanTool = cleanTool.replace('/', '');
-        setTool(cleanTool, params.get('open') === '1');
+        setTool(cleanTool, false);
         
         // Handle format and size overrides from URL
         if (formatParam) {
@@ -475,16 +475,16 @@ function handleInitialRoute() {
     // 2. Fallback to path-based routing
     if (['/resize-passport-photo', '/discord-pfp-resizer', '/heic-to-jpg', '/crop-image', '/instagram-resizer', '/facebook-resizer'].includes(path)) {
         const tool = path.replace('/', '');
-        setTool(tool, params.get('open') === '1');
+        setTool(tool, false);
     } else if (path.includes('/tools/')) {
         // Remove the trailing slash so getToolUrl() recognizes the tool slug.
         const tool = path.split('/tools/')[1].replace(/\/+$/, '');
-        setTool(tool, params.get('open') === '1');
+        setTool(tool, false);
     } else if (path.includes('/compress-image-to-')) {
         const tool = path.replace('/', '');
-        setTool(tool, params.get('open') === '1');
+        setTool(tool, false);
     } else if (hash) {
-        setTool(hash.substring(1), params.get('open') === '1');
+        setTool(hash.substring(1), false);
     } else {
         updateSEO('home');
         document.body.classList.remove('dedicated-tool-mode');
@@ -1754,10 +1754,10 @@ function setTool(tool, forceOpen = false) {
     document.body.classList.remove('mode-discord-pfp-resizer', 'mode-resize-passport-photo', 'mode-heic-to-jpg');
     
     // Auto-open image upload dialog if requested
-    if (forceOpen && !currentImage) {
-        requestAnimationFrame(() => {
-            if (fileInput) fileInput.click();
-        });
+    if (forceOpen && !currentImage && fileInput) {
+        // Keep the picker call in the originating click's user-activation window.
+        // Route initialization must not auto-open a picker; users can click the upload zone.
+        fileInput.click();
     }
 
     // Reset special controls
