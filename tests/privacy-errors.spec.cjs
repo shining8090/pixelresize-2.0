@@ -167,7 +167,7 @@ test('dedicated HEIC route allows the blob workers required by the converter', a
   await page.goto('/heic-to-jpg/');
 
   const policy = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
-  expect(policy).toMatch(/worker-src\\s+[^;]*\\bblob:/);
+  expect(policy).toMatch(/worker-src\s+[^;]*\bblob:/);
 });
 
 test('clicking the HEIC tool opens the file chooser from the user action', async ({ page }) => {
