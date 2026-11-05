@@ -777,10 +777,9 @@ function updateInfo() {
     } else if (selectedTargetKB) {
         infoEst.textContent = `~${selectedTargetKB} KB (Apply to see exact)`;
     } else {
-        const q = parseInt(compressSlider.value) / 100;
-        // Simple heuristic for estimation
-        const est = originalFile ? originalFile.size * q * 0.7 : 0;
-        infoEst.textContent = formatBytes(est);
+        // Do not show a guessed file size: browser encoders can produce
+        // results that differ substantially from a quality-based estimate.
+        infoEst.textContent = 'Apply to see actual size';
     }
 }
 
@@ -1029,6 +1028,22 @@ async function applyChanges() {
     } else {
         processedBlob = await new Promise(resolve => canvas.toBlob(resolve, format, quality));
         if (!processedBlob) throw new Error('Image processing failed.');
+    }
+
+    // Preserve the original file when Resize was applied without changing
+    // dimensions, crop, rotation, or flip. Re-encoding an unchanged PNG can
+    // inflate its size dramatically without providing any benefit.
+    const isUnchangedResize =
+        activeTab === 'resize' &&
+        currentCrop.w === 0 &&
+        finalW === currentImage.width &&
+        finalH === currentImage.height &&
+        rotation % 360 === 0 &&
+        flipH === 1 &&
+        flipV === 1;
+
+    if (isUnchangedResize && originalFile) {
+        processedBlob = originalFile;
     }
 
     if (processedDataUrl && processedDataUrl.startsWith('blob:')) {
