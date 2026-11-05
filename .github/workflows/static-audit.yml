@@ -78,7 +78,7 @@ jobs:
           ns = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
           for loc in tree.findall('.//sm:loc', ns):
               url = loc.text or ''
-              path = re.sub(r'^https://pixelresize\\.site', '', url)
+              path = re.sub(r'^https://pixelresize\.site', '', url)
               if path in ('/', ''):
                   target = root / 'index.html'
               elif path.endswith('/'):
