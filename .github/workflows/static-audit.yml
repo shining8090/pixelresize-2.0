@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   audit:
+    if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/tools-seo-redesign-audit-2026-11-05' || (github.event_name == 'pull_request' && github.base_ref == 'main') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
