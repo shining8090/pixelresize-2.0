@@ -769,8 +769,21 @@ function rotate(deg) {
 }
 
 function updateInfo() {
-    const formatChip = document.querySelector('#tab-convert .btn-chip.active');
-    infoFmt.textContent = formatChip ? formatChip.textContent : 'PNG';
+    const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+    const selectedFormat = document.querySelector('#tab-convert .btn-chip.active')?.dataset.format;
+    const actualFormat = processedBlob?.type ||
+        ((activeTab === 'convert' || activeTab === 'compress') ? selectedFormat : originalFile?.type) ||
+        'image/png';
+    const formatLabels = {
+        'image/jpeg': 'JPG',
+        'image/jpg': 'JPG',
+        'image/png': 'PNG',
+        'image/webp': 'WEBP',
+        'image/avif': 'AVIF',
+        'image/bmp': 'BMP',
+        'image/gif': 'GIF'
+    };
+    infoFmt.textContent = formatLabels[actualFormat] || actualFormat.replace('image/', '').toUpperCase() || 'UNKNOWN';
     
     if (processedBlob) {
         infoEst.textContent = formatBytes(processedBlob.size);
