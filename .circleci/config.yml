@@ -1,0 +1,57 @@
+version: 2.1
+
+jobs:
+  pixelresize_audit:
+    docker:
+      - image: cimg/node:22
+
+    working_directory: ~/project
+
+    steps:
+      - checkout
+
+      - run:
+          name: Clean Dependency Installation
+          command: npm ci
+
+      - run:
+          name: Security Audit
+          command: npm audit
+
+      - run:
+          name: TypeScript Check
+          command: npm run lint
+
+      - run:
+          name: Production Build
+          command: npm run build
+
+      - run:
+          name: Verify Classic Production Scripts
+          command: |
+            test -f script.js
+            test -f gif-encoder.js
+            grep -q 'src="script.js"' index.html
+            grep -q 'src="gif-encoder.js"' index.html
+
+      - run:
+          name: JavaScript Syntax Check
+          command: |
+            node --check script.js
+            node --check gif-encoder.js
+
+      - run:
+          name: Verify Build Output
+          command: |
+            test -f dist/index.html
+            find dist/assets -maxdepth 1 -type f -name '*.css' | grep -q .
+
+workflows:
+  build_and_audit:
+    jobs:
+      - pixelresize_audit:
+          filters:
+            branches:
+              only:
+                - main
+                - seo-tool-logic-fix-2026-10-07
