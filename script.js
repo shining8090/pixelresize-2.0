@@ -429,26 +429,31 @@ const unsavedModal = document.getElementById('unsavedModal');
 const stayBtn = document.getElementById('stayBtn');
 const leaveBtn = document.getElementById('leaveBtn');
 
+function normalizeToolRoute(value) {
+    let tool = String(value || '').trim();
+    if (!tool) return '';
+    tool = tool.split(/[?#]/, 1)[0];
+    tool = tool.replace(/^\\/+|\\/+$/g, '');
+    if (tool.startsWith('tools/')) tool = tool.slice('tools/'.length);
+    return tool.replace(/^\\/+|\\/+$/g, '');
+}
+
 function handleInitialRoute() {
     const params = new URLSearchParams(window.location.search);
-    const path = window.location.pathname;
+    const path = window.location.pathname.replace(/\\/+$/, '') || '/';
     const hash = window.location.hash;
-    
-    // Check for SPA redirected parameters e.g. ?/tools/image-resizer or ?p=/tools/image-resizer
+
+    // GitHub Pages/404 fallback can encode a route as ?/tools/name/.
     const redirectParam = params.get('p') || (window.location.search.startsWith('?/') ? window.location.search.slice(2).split('&')[0] : null);
-    
-    // 1. Prioritize direct URL parameters if present
     const toolParam = params.get('tool') || redirectParam;
     const formatParam = params.get('format');
     const sizeParam = params.get('size');
-    
+    const openParam = params.get('open') === '1';
+
     if (toolParam) {
-        let cleanTool = toolParam;
-        if (cleanTool.startsWith('/tools/')) cleanTool = cleanTool.replace('/tools/', '');
-        if (cleanTool.startsWith('/')) cleanTool = cleanTool.replace('/', '');
-        setTool(cleanTool, params.get('open') === '1');
-        
-        // Handle format and size overrides from URL
+        const cleanTool = normalizeToolRoute(toolParam);
+        if (cleanTool) setTool(cleanTool, openParam);
+        else updateSEO('home');
         if (formatParam) {
             const f = formatParam.includes('/') ? formatParam : `image/${formatParam}`;
             setTimeout(() => {
@@ -457,7 +462,7 @@ function handleInitialRoute() {
             }, 50);
         }
         if (sizeParam) {
-           setTimeout(() => {
+            setTimeout(() => {
                 const btn = document.querySelector(`[data-target="${sizeParam}"]`);
                 if (btn) btn.click();
             }, 50);
@@ -465,18 +470,17 @@ function handleInitialRoute() {
         return;
     }
 
-    // 2. Fallback to path-based routing
     if (['/resize-passport-photo', '/discord-pfp-resizer', '/heic-to-jpg', '/crop-image', '/instagram-resizer', '/facebook-resizer'].includes(path)) {
-        const tool = path.replace('/', '');
-        setTool(tool, params.get('open') === '1');
-    } else if (path.includes('/tools/')) {
-        const tool = path.split('/tools/')[1];
-        setTool(tool, params.get('open') === '1');
-    } else if (path.includes('/compress-image-to-')) {
-        const tool = path.replace('/', '');
-        setTool(tool, params.get('open') === '1');
+        setTool(path.slice(1), openParam);
+    } else if (path.startsWith('/tools/')) {
+        const tool = normalizeToolRoute(path.slice('/tools/'.length));
+        if (tool) setTool(tool, openParam);
+        else updateSEO('home');
+    } else if (path.startsWith('/compress-image-to-')) {
+        setTool(path.slice(1), openParam);
     } else if (hash) {
-        setTool(hash.substring(1), params.get('open') === '1');
+        const tool = normalizeToolRoute(hash.slice(1));
+        if (tool) setTool(tool, openParam);
     } else {
         updateSEO('home');
         document.body.classList.remove('dedicated-tool-mode');
