@@ -1984,3 +1984,362 @@ a {
     margin-left: auto;
     margin-right: auto;
 }
+
+
+/* ==========================================
+   PIXELRESIZE REDESIGN — PHASE 3 SPACING & RHYTHM
+   CSS-only presentation improvements. Existing HTML, routes,
+   JavaScript, and image-processing logic remain untouched.
+   ========================================== */
+
+/* Use a consistent, tighter vertical rhythm across homepage sections. */
+body {
+    line-height: 1.6;
+}
+
+body > main > .section,
+main > .section {
+    padding-top: 64px;
+    padding-bottom: 68px;
+}
+
+#tools.section {
+    padding-top: 64px;
+    padding-bottom: 72px;
+}
+
+.section-header {
+    margin-bottom: 34px;
+}
+
+.section-title {
+    margin-bottom: 16px;
+    line-height: 1.22;
+}
+
+.section-subtitle {
+    line-height: 1.7;
+}
+
+/* How it works: remove the oversized empty feeling and make steps scannable. */
+#how-it-works {
+    padding-top: 68px;
+    padding-bottom: 72px;
+}
+
+#how-it-works > .container {
+    width: min(100% - 48px, 1160px);
+    max-width: 1160px;
+}
+
+#how-it-works .grid-2 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+    gap: clamp(32px, 5vw, 64px);
+    align-items: center;
+}
+
+#how-it-works .section-title {
+    margin: 0 0 26px;
+    font-size: clamp(2rem, 3.2vw, 2.55rem);
+}
+
+#how-it-works .steps-list {
+    display: grid;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+#how-it-works .step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 0;
+}
+
+#how-it-works .step-num {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: #F0EEFF;
+    color: #5636E8;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+#how-it-works .step-item h4 {
+    margin: 2px 0 7px;
+    font-size: 1.04rem;
+    line-height: 1.35;
+    font-weight: 750;
+}
+
+#how-it-works .step-item p {
+    margin: 0;
+    color: #596273;
+    font-size: 0.98rem;
+    line-height: 1.65;
+}
+
+#how-it-works .glass-card {
+    padding: clamp(26px, 3vw, 38px);
+    border-radius: 22px;
+}
+
+#how-it-works .glass-card h3 {
+    margin: 0 0 14px;
+    line-height: 1.35;
+}
+
+#how-it-works .glass-card p {
+    margin: 0;
+    line-height: 1.75;
+}
+
+/* SEO article: keep readable line lengths and visible paragraph separation. */
+.seo-content {
+    padding-top: 54px !important;
+    padding-bottom: 58px !important;
+}
+
+.seo-content > .container {
+    width: min(100% - 48px, 1040px);
+    max-width: 1040px;
+}
+
+.seo-content .prose {
+    max-width: 100%;
+    font-size: 0.98rem;
+    line-height: 1.78;
+}
+
+.seo-content .prose h2 {
+    margin: 0 0 18px;
+    font-size: clamp(1.55rem, 2.5vw, 2rem);
+    line-height: 1.3;
+}
+
+.seo-content .prose h3 {
+    margin: 30px 0 12px;
+    font-size: 1.22rem;
+    line-height: 1.4;
+}
+
+.seo-content .prose p {
+    margin: 0 0 18px;
+    line-height: 1.78;
+}
+
+.seo-content .prose strong {
+    line-height: inherit;
+}
+
+/* Security benefits: balanced cards with breathing room inside, not around. */
+#security {
+    padding-top: 48px;
+    padding-bottom: 48px;
+}
+
+#security .grid-3 {
+    gap: 22px;
+}
+
+#security .security-item {
+    padding: 26px 22px;
+    border: 1px solid #E4E7F0;
+    border-radius: 18px;
+    background: #FFFFFF;
+    box-shadow: 0 5px 18px rgba(23, 33, 61, 0.045);
+}
+
+#security .security-item h3 {
+    margin: 12px 0 10px;
+    font-size: 1.12rem;
+    line-height: 1.35;
+}
+
+#security .security-item p {
+    max-width: 310px;
+    margin: 0 auto;
+    font-size: 0.94rem;
+    line-height: 1.65;
+}
+
+/* FAQ: improve question/answer separation and keep the list compact. */
+#faq {
+    padding-top: 66px;
+    padding-bottom: 70px;
+}
+
+#faq .section-header {
+    margin-bottom: 28px;
+}
+
+#faq .faq-container {
+    max-width: 850px;
+}
+
+#faq .faq-item {
+    margin-bottom: 14px;
+    border-radius: 16px;
+}
+
+#faq .faq-question {
+    padding: 21px 24px 10px;
+    line-height: 1.45;
+}
+
+#faq .faq-answer {
+    padding: 4px 24px 22px;
+    line-height: 1.7;
+}
+
+/* Blog cards: consistent card height and comfortable text spacing. */
+#blog {
+    padding-top: 68px;
+    padding-bottom: 72px;
+}
+
+#blog .section-header {
+    margin-bottom: 34px;
+}
+
+#blog .grid-3 {
+    gap: 24px;
+}
+
+#blog .blog-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 18px;
+}
+
+#blog .blog-image {
+    flex: 0 0 190px;
+    height: 190px;
+}
+
+#blog .blog-content {
+    flex: 1;
+    padding: 22px 24px 24px;
+}
+
+#blog .blog-content h3 {
+    margin: 0 0 12px;
+    line-height: 1.4;
+}
+
+#blog .blog-content p {
+    margin: 0 0 12px;
+    line-height: 1.65;
+}
+
+/* CTA: ensure contrast and avoid excessive height. */
+.cta-section {
+    padding: 64px 0 !important;
+}
+
+.cta-section h2 {
+    margin: 0 0 14px;
+    color: #FFFFFF;
+    line-height: 1.3;
+}
+
+.cta-section p {
+    margin: 0 0 26px;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.65;
+}
+
+.cta-section .btn {
+    min-height: 54px;
+}
+
+/* Footer: compact, aligned columns and readable link spacing. */
+.footer {
+    padding: 58px 0 30px !important;
+}
+
+.footer .grid-4 {
+    gap: 34px;
+}
+
+.footer-col h4 {
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+.footer-link {
+    display: block;
+    margin: 0 0 12px;
+    line-height: 1.5;
+}
+
+/* Smaller screens: preserve clear spacing without wasting viewport height. */
+@media (max-width: 768px) {
+    body > main > .section,
+    main > .section,
+    #how-it-works,
+    #faq,
+    #blog {
+        padding-top: 48px;
+        padding-bottom: 52px;
+    }
+
+    #how-it-works > .container,
+    .seo-content > .container {
+        width: min(100% - 32px, 680px);
+    }
+
+    #how-it-works .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    #how-it-works .steps-list {
+        gap: 18px;
+    }
+
+    .seo-content {
+        padding-top: 42px !important;
+        padding-bottom: 44px !important;
+    }
+
+    .seo-content .prose {
+        font-size: 0.95rem;
+        line-height: 1.72;
+    }
+
+    #security {
+        padding-top: 34px;
+        padding-bottom: 34px;
+    }
+
+    #security .grid-3,
+    #blog .grid-3 {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    #security .security-item {
+        padding: 22px 18px;
+    }
+
+    #blog .blog-image {
+        flex-basis: 180px;
+        height: 180px;
+    }
+
+    .cta-section {
+        padding: 48px 0 !important;
+    }
+
+    .footer {
+        padding: 44px 0 26px !important;
+    }
+}
