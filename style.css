@@ -3229,3 +3229,130 @@ main > .section {
         max-height: 340px;
     }
 }
+
+
+/* PIXELRESIZE — FINAL DESKTOP FIT PASS (NO FIXED CONTROL HEIGHTS) */
+@media (min-width: 1101px) {
+    #processing-ui {
+        padding: 18px 0 34px;
+    }
+
+    #processing-ui .editor-grid {
+        grid-template-columns: minmax(390px, 0.84fr) minmax(0, 1.16fr);
+        gap: 24px;
+        align-items: start;
+    }
+
+    #processing-ui .tab-content-wrapper {
+        min-height: 0;
+        padding: 0 20px 16px;
+    }
+
+    #processing-ui .tool-tabs {
+        margin: 12px 12px 14px;
+    }
+
+    #processing-ui .tab-btn {
+        min-height: 39px;
+        font-size: 12px;
+    }
+
+    #processing-ui #tab-crop > div {
+        margin-bottom: 13px !important;
+    }
+
+    #processing-ui #tab-crop > div > label {
+        margin-bottom: 7px !important;
+    }
+
+    #processing-ui #aspect-ratio-presets,
+    #processing-ui #tab-convert .format-grid,
+    #processing-ui #tab-target .format-grid {
+        gap: 7px;
+    }
+
+    #processing-ui .btn-chip,
+    #processing-ui .transform-actions .btn,
+    #processing-ui .transform-actions .btn-chip {
+        min-height: 39px;
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    #processing-ui #tab-crop > p {
+        margin-top: 9px !important;
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+
+    #processing-ui .info-bar {
+        padding: 12px 20px;
+        gap: 10px 16px;
+    }
+
+    #processing-ui .info-item {
+        gap: 3px;
+    }
+
+    #processing-ui .info-label {
+        font-size: 9px;
+    }
+
+    #processing-ui .info-value {
+        font-size: 13px;
+    }
+
+    #processing-ui .processing-actions {
+        padding: 12px 20px 14px;
+        gap: 7px;
+    }
+
+    #processing-ui .processing-actions .btn {
+        min-height: 41px;
+        font-size: 13px;
+    }
+
+    #processing-ui .preview-wrapper {
+        min-height: clamp(350px, calc(100vh - 320px), 450px);
+        padding: 42px 24px 24px;
+    }
+
+    #processing-ui .preview-wrapper img {
+        max-height: clamp(260px, calc(100vh - 430px), 370px);
+    }
+
+    #tools.section {
+        padding-top: 48px;
+    }
+}
+
+@media (min-width: 1101px) and (max-height: 800px) {
+    #processing-ui .tab-content-wrapper {
+        padding-bottom: 12px;
+    }
+
+    #processing-ui .form-input {
+        min-height: 41px;
+    }
+
+    #processing-ui .checkbox-group {
+        margin-top: 10px;
+        gap: 8px;
+    }
+
+    #processing-ui .info-bar {
+        padding-block: 10px;
+    }
+
+    #processing-ui .processing-actions {
+        padding-block: 10px 12px;
+    }
+
+    #processing-ui .processing-actions .btn {
+        min-height: 39px;
+    }
+
+    #processing-ui .preview-wrapper {
+        min-height: 340px;
+    }
+}
