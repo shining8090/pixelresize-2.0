@@ -3021,3 +3021,211 @@ main > .section {
         padding-inline: 9px;
     }
 }
+
+
+/* PIXELRESIZE — EDITOR LAYOUT RESET: READABLE, BALANCED, NO CLIPPING */
+#processing-ui {
+    width: 100%;
+    padding: 26px 0 56px;
+    overflow: visible;
+}
+
+#processing-ui > .container,
+#processing-ui .container {
+    width: min(100% - 48px, 1240px);
+    max-width: 1240px;
+    margin-inline: auto;
+}
+
+#processing-ui .editor-grid {
+    width: 100%;
+    max-width: 1240px;
+    grid-template-columns: minmax(390px, 0.82fr) minmax(0, 1.18fr);
+    gap: 28px;
+    align-items: start;
+    overflow: visible;
+}
+
+#processing-ui .editor-tools-container,
+#processing-ui .editor-preview-container {
+    min-width: 0;
+    width: 100%;
+}
+
+#processing-ui .editor-tools-container {
+    overflow: visible;
+    border-radius: 20px;
+}
+
+#processing-ui .tool-tabs {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 3px;
+    margin: 14px 14px 18px;
+    padding: 5px;
+}
+
+#processing-ui .tab-btn {
+    min-width: 0;
+    min-height: 42px;
+    padding: 8px 4px;
+    font-size: 13px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+#processing-ui .tab-content-wrapper {
+    padding: 0 22px 22px;
+    min-height: 145px;
+}
+
+#processing-ui .tab-content {
+    font-size: 14px;
+}
+
+#processing-ui .input-group label,
+#processing-ui #tab-crop > div > label {
+    font-size: 12px;
+    letter-spacing: .045em;
+    margin-bottom: 10px !important;
+}
+
+#processing-ui .form-input {
+    min-height: 46px;
+    font-size: 15px;
+}
+
+#processing-ui .checkbox-label {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+#processing-ui .btn-chip,
+#processing-ui .transform-actions .btn,
+#processing-ui .transform-actions .btn-chip {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.25;
+}
+
+#processing-ui #tab-crop > div {
+    margin-bottom: 20px !important;
+}
+
+#processing-ui #tab-crop > p {
+    font-size: 12px;
+    padding: 11px 13px;
+}
+
+#processing-ui .info-bar {
+    padding: 17px 22px;
+    gap: 15px 20px;
+}
+
+#processing-ui .info-label {
+    font-size: 10px;
+}
+
+#processing-ui .info-value {
+    font-size: 14px;
+}
+
+#processing-ui .processing-actions {
+    padding: 16px 22px 20px;
+}
+
+#processing-ui .processing-actions .btn {
+    min-height: 46px;
+    font-size: 14px;
+}
+
+#processing-ui .preview-wrapper {
+    min-height: clamp(420px, calc(100vh - 250px), 560px);
+    padding: 48px 30px 30px;
+    overflow: hidden;
+}
+
+#processing-ui .preview-wrapper img {
+    max-width: 100%;
+    max-height: clamp(300px, calc(100vh - 390px), 470px);
+    object-fit: contain;
+}
+
+#processing-ui .preview-wrapper::before {
+    top: 18px;
+    left: 22px;
+    font-size: 10px;
+}
+
+#processing-ui .remove-btn {
+    top: 13px;
+    right: 14px;
+}
+
+#processing-ui .editor-preview-container {
+    position: relative;
+    top: auto;
+    overflow: visible;
+}
+
+#processing-ui .editor-preview-container #related-tools-container {
+    margin-top: 20px;
+}
+
+#tools.section {
+    padding-top: 64px;
+}
+
+@media (max-width: 1050px) {
+    #processing-ui .editor-grid {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "preview" "tools";
+        gap: 18px;
+    }
+
+    #processing-ui .preview-wrapper {
+        min-height: 360px;
+    }
+}
+
+@media (max-width: 640px) {
+    #processing-ui {
+        padding: 18px 0 38px;
+    }
+
+    #processing-ui > .container,
+    #processing-ui .container {
+        width: min(100% - 24px, 560px);
+    }
+
+    #processing-ui .tool-tabs {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+        margin: 10px 10px 16px;
+    }
+
+    #processing-ui .tab-btn {
+        min-height: 40px;
+        font-size: 13px;
+    }
+
+    #processing-ui .tab-content-wrapper {
+        padding: 0 16px 18px;
+    }
+
+    #processing-ui .info-bar,
+    #processing-ui .processing-actions {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    #processing-ui .preview-wrapper {
+        min-height: 280px;
+        padding: 42px 14px 14px;
+    }
+
+    #processing-ui .preview-wrapper img {
+        max-height: 340px;
+    }
+}
