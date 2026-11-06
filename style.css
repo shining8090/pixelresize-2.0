@@ -2416,3 +2416,111 @@ main > .section {
         padding: 28px 18px;
     }
 }
+
+
+/* PIXELRESIZE REDESIGN — COMPACT NAV + DESKTOP EDITOR FIT */
+.header {
+    min-height: 64px;
+    padding: 0;
+}
+
+.nav-container {
+    min-height: 64px;
+    gap: 20px;
+}
+
+.logo-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 17px;
+}
+
+.logo-text {
+    font-size: 19px;
+}
+
+.nav {
+    gap: 24px;
+}
+
+.nav-link {
+    font-size: 13px;
+}
+
+.header .btn,
+.header .btn-primary {
+    min-height: 40px;
+    padding: 10px 20px;
+    font-size: 13px;
+}
+
+#processing-ui .editor-grid {
+    grid-template-columns: minmax(300px, 0.72fr) minmax(0, 1.28fr);
+    gap: 22px;
+    align-items: stretch;
+}
+
+#processing-ui .editor-preview-container {
+    position: relative;
+    top: auto;
+    min-width: 0;
+}
+
+#processing-ui .preview-wrapper {
+    min-height: clamp(330px, calc(100vh - 330px), 460px);
+    padding: 20px;
+}
+
+#processing-ui .preview-wrapper img {
+    max-height: clamp(260px, calc(100vh - 410px), 420px);
+    object-fit: contain;
+}
+
+#processing-ui .editor-tools-container {
+    min-width: 0;
+}
+
+@media (max-width: 1100px) {
+    #processing-ui .editor-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas: "preview" "tools";
+        gap: 18px;
+    }
+
+    #processing-ui .preview-wrapper {
+        min-height: 300px;
+    }
+
+    #processing-ui .preview-wrapper img {
+        max-height: 380px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header,
+    .nav-container {
+        min-height: 60px;
+    }
+
+    .header {
+        padding: 0;
+    }
+
+    .logo-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .logo-text {
+        font-size: 18px;
+    }
+
+    .nav {
+        gap: 14px;
+    }
+
+    #processing-ui .preview-wrapper {
+        min-height: 260px;
+        padding: 14px;
+    }
+}
