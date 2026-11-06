@@ -433,14 +433,14 @@ function normalizeToolRoute(value) {
     let tool = String(value || '').trim();
     if (!tool) return '';
     tool = tool.split(/[?#]/, 1)[0];
-    tool = tool.replace(/^\\/+|\\/+$/g, '');
+    tool = tool.replace(/^\/+|\/+$/g, '');
     if (tool.startsWith('tools/')) tool = tool.slice('tools/'.length);
-    return tool.replace(/^\\/+|\\/+$/g, '');
+    return tool.replace(/^\/+|\/+$/g, '');
 }
 
 function handleInitialRoute() {
     const params = new URLSearchParams(window.location.search);
-    const path = window.location.pathname.replace(/\\/+$/, '') || '/';
+    const path = window.location.pathname.replace(/\/+$/, '') || '/';
     const hash = window.location.hash;
 
     // GitHub Pages/404 fallback can encode a route as ?/tools/name/.
