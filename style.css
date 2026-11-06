@@ -2687,3 +2687,213 @@ main > .section {
         max-height: 340px;
     }
 }
+
+
+/* PIXELRESIZE REDESIGN — EDITOR WORKSPACE POLISH */
+#processing-ui {
+    scroll-margin-top: 76px;
+}
+
+#processing-ui .editor-grid {
+    max-width: 1240px;
+    margin: 0 auto;
+    grid-template-columns: minmax(330px, 0.74fr) minmax(0, 1.26fr);
+    gap: 26px;
+    align-items: start;
+}
+
+#processing-ui .editor-tools-container {
+    border-radius: 22px;
+    border-color: #E2E6F0;
+    box-shadow: 0 12px 34px rgba(23, 33, 61, 0.065);
+    overflow: hidden;
+}
+
+#processing-ui .tool-tabs {
+    margin: 14px 14px 20px;
+    padding: 5px;
+    border: 1px solid #E7EAF2;
+    background: #F4F5F9;
+    border-radius: 14px;
+}
+
+#processing-ui .tab-btn {
+    min-height: 38px;
+    font-size: 12px;
+    letter-spacing: -0.01em;
+}
+
+#processing-ui .tab-btn.active {
+    color: #4F32D7;
+    background: #FFFFFF;
+    box-shadow: 0 2px 7px rgba(34, 40, 70, 0.10);
+}
+
+#processing-ui .tab-content-wrapper {
+    padding: 0 22px 18px;
+}
+
+#processing-ui .input-group label {
+    margin-bottom: 7px;
+    color: #737E94;
+    font-size: 10px;
+    letter-spacing: 0.075em;
+}
+
+#processing-ui .form-input {
+    min-height: 44px;
+    background: #F8F9FC;
+    border: 1px solid #E1E6F0;
+    border-radius: 11px;
+    box-shadow: inset 0 1px 1px rgba(23, 33, 61, 0.02);
+}
+
+#processing-ui .form-input:focus {
+    background: #FFFFFF;
+    border-color: #8B78F0;
+    box-shadow: 0 0 0 3px rgba(86, 54, 232, 0.10);
+}
+
+#processing-ui .checkbox-group {
+    margin-top: 14px;
+    gap: 11px;
+}
+
+#processing-ui .checkbox-label {
+    font-size: 12px;
+    color: #35405A;
+}
+
+#processing-ui .info-bar {
+    padding: 16px 22px;
+    gap: 14px 18px;
+    background: #F8F9FC;
+    border-top: 1px solid #E9ECF3;
+    border-bottom: 1px solid #E9ECF3;
+}
+
+#processing-ui .info-item {
+    gap: 4px;
+}
+
+#processing-ui .info-label {
+    color: #8993A7;
+    font-size: 9px;
+    letter-spacing: 0.11em;
+}
+
+#processing-ui .info-value {
+    color: #202B45;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+#processing-ui .processing-actions {
+    padding: 16px 22px 20px;
+    display: grid;
+    gap: 9px;
+}
+
+#processing-ui .processing-actions .btn {
+    min-height: 44px;
+    margin: 0 !important;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+#processing-ui #download-btn {
+    background: #F6F7FB !important;
+    border: 1px solid #E2E6F0 !important;
+    color: #39445D;
+}
+
+#processing-ui #download-btn:hover {
+    background: #EEF0F8 !important;
+    border-color: #D5DAE8 !important;
+}
+
+#processing-ui .preview-wrapper {
+    min-height: clamp(360px, calc(100vh - 260px), 540px);
+    padding: clamp(22px, 3vw, 38px);
+    border-radius: 22px;
+    border: 1px solid #E1E6F0;
+    background: linear-gradient(145deg, #F6F7FB 0%, #ECEFF6 100%);
+    box-shadow: 0 12px 34px rgba(23, 33, 61, 0.055);
+}
+
+#processing-ui .preview-wrapper::before {
+    content: "IMAGE PREVIEW";
+    position: absolute;
+    top: 16px;
+    left: 20px;
+    color: #8A94A8;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    pointer-events: none;
+}
+
+#processing-ui .preview-wrapper img {
+    max-width: 100%;
+    max-height: clamp(270px, calc(100vh - 400px), 450px);
+    border: 1px solid rgba(255,255,255,0.9);
+    border-radius: 13px;
+    box-shadow: 0 16px 38px rgba(23, 33, 61, 0.17);
+}
+
+#processing-ui .remove-btn {
+    top: 13px;
+    right: 14px;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.92);
+    color: #657087;
+    border: 1px solid #E4E8F0;
+    font-size: 19px;
+    box-shadow: 0 3px 10px rgba(23, 33, 61, 0.08);
+}
+
+@media (max-width: 1100px) {
+    #processing-ui .editor-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas: "preview" "tools";
+        gap: 18px;
+    }
+
+    #processing-ui .preview-wrapper {
+        min-height: 320px;
+    }
+
+    #processing-ui .preview-wrapper img {
+        max-height: 380px;
+    }
+}
+
+@media (max-width: 768px) {
+    #processing-ui .editor-tools-container,
+    #processing-ui .preview-wrapper {
+        border-radius: 16px;
+    }
+
+    #processing-ui .tool-tabs {
+        margin: 10px 10px 14px;
+    }
+
+    #processing-ui .tab-content-wrapper,
+    #processing-ui .info-bar,
+    #processing-ui .processing-actions {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    #processing-ui .preview-wrapper {
+        min-height: 270px;
+        padding: 24px 14px 14px;
+    }
+
+    #processing-ui .preview-wrapper img {
+        max-height: 330px;
+    }
+}
