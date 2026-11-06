@@ -1719,3 +1719,251 @@ a {
         transition-duration: 0.01ms !important;
     }
 }
+
+
+/* ==========================================
+   PIXELRESIZE REDESIGN — PHASE 2 HOMEPAGE LAYOUT
+   Layout-only refinements; preserve existing markup and behavior.
+   ========================================== */
+.header {
+    min-height: 76px;
+}
+
+.nav-container {
+    min-height: 76px;
+    gap: 28px;
+}
+
+.logo {
+    gap: 11px;
+}
+
+.logo-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 19px;
+}
+
+.logo-text {
+    font-size: 20px;
+    font-weight: 750;
+    letter-spacing: -0.045em;
+}
+
+.nav {
+    gap: 30px;
+}
+
+.nav-link {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.header-actions .btn {
+    min-height: 42px;
+    padding: 11px 22px;
+}
+
+.hero {
+    padding: 68px 0 82px;
+}
+
+.hero > .container {
+    width: min(100% - 48px, 1160px);
+    max-width: 1160px;
+}
+
+.breadcrumb-nav {
+    max-width: 1080px;
+    margin: 0 auto 28px;
+}
+
+.hero-title {
+    max-width: 920px;
+    margin: 0 auto 18px;
+    font-size: clamp(2.7rem, 4.4vw, 3.65rem);
+    line-height: 1.12;
+    font-weight: 800;
+}
+
+.hero-subtitle {
+    max-width: 650px;
+    margin: 0 auto 34px;
+    font-size: 1.05rem;
+    line-height: 1.75;
+}
+
+.upload-container {
+    width: min(100%, 760px);
+    min-height: 230px;
+    margin: 0 auto;
+    padding: 46px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-zone-inner {
+    width: 100%;
+}
+
+.upload-icon-wrapper {
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 22px;
+}
+
+.upload-icon-wrapper svg {
+    width: 34px;
+    height: 34px;
+}
+
+.upload-zone-inner h3 {
+    margin: 0 0 10px;
+    font-size: 1.12rem;
+    font-weight: 750;
+}
+
+.upload-zone-inner p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+#tools.section {
+    padding: 76px 0 88px;
+}
+
+#tools > .container {
+    width: min(100% - 48px, 1160px);
+    max-width: 1160px;
+}
+
+#tools .section-header {
+    max-width: 680px;
+    margin: 0 auto 36px;
+}
+
+#tools .section-title {
+    margin-bottom: 12px;
+    font-size: clamp(1.9rem, 3vw, 2.35rem);
+    line-height: 1.2;
+    font-weight: 800;
+}
+
+#tools .section-subtitle {
+    max-width: 560px;
+    margin: 0 auto;
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.tools-grid-unified {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px;
+    width: 100%;
+}
+
+.tool-card-fancy {
+    min-height: 190px;
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+}
+
+.tool-icon-fancy {
+    width: 54px;
+    height: 54px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    font-size: 26px;
+}
+
+.tool-card-fancy h3 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.35;
+    font-weight: 750;
+}
+
+.tool-card-fancy p {
+    max-width: 190px;
+    margin: 0;
+    font-size: 0.84rem;
+    line-height: 1.55;
+}
+
+@media (min-width: 1100px) {
+    .tools-grid-unified {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .header,
+    .nav-container {
+        min-height: 66px;
+    }
+
+    .hero {
+        padding: 48px 0 58px;
+    }
+
+    .hero > .container,
+    #tools > .container {
+        width: min(100% - 32px, 680px);
+    }
+
+    .hero-title {
+        font-size: clamp(2.15rem, 7vw, 3rem);
+    }
+
+    .hero-subtitle {
+        font-size: 0.96rem;
+        margin-bottom: 26px;
+    }
+
+    .upload-container {
+        min-height: 205px;
+        padding: 34px 20px;
+    }
+
+    #tools.section {
+        padding: 58px 0 66px;
+    }
+
+    .tools-grid-unified {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .tool-card-fancy {
+        min-height: 168px;
+        padding: 18px 12px;
+    }
+}
+
+@media (max-width: 420px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .tools-grid-unified {
+        gap: 10px;
+    }
+
+    .tool-card-fancy {
+        min-height: 158px;
+    }
+}
