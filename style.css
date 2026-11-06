@@ -2343,3 +2343,17 @@ main > .section {
         padding: 44px 0 26px !important;
     }
 }
+
+
+/* Homepage blog CTA: give the View All Blogs link comfortable button spacing. */
+#blog .section-header + .grid-3 + .text-center .btn,
+#blog .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 14px 32px;
+    border-radius: 14px;
+    line-height: 1.25;
+    font-weight: 700;
+}
