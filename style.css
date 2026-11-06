@@ -2352,7 +2352,7 @@ main > .section {
     align-items: center;
     justify-content: center;
     min-height: 52px;
-    padding: 14px 32px;
+    padding: 20px 32px;
     border-radius: 14px;
     line-height: 1.25;
     font-weight: 700;
