@@ -54,4 +54,4 @@ workflows:
             branches:
               only:
                 - main
-                - seo-tool-logic-fix-2026-10-07
+                - tools-seo-redesign-audit-2026-11-05
