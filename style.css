@@ -1967,3 +1967,20 @@ a {
         min-height: 158px;
     }
 }
+
+
+/* PIXELRESIZE REDESIGN — PHASE 2 GRID WIDTH FIX
+   The existing homepage markup nests the tool grid inside .section-header.
+   Let this wrapper use the full tools container width while keeping its
+   heading and description centered. */
+#tools .section-header {
+    max-width: none;
+    width: 100%;
+}
+
+#tools .section-header > .section-title,
+#tools .section-header > .section-subtitle {
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+}
