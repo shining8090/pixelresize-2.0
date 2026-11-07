@@ -981,7 +981,7 @@ async function applyChanges() {
     ctx.drawImage(currentImage, sx, sy, sw, sh, -finalW / 2, -finalH / 2, finalW, finalH);
     ctx.restore();
 
-    let format = document.querySelector('#tab-convert .btn-chip.active')?.dataset.format || 'image/png';
+    let format = activeTab === 'resize' ? (originalFile?.type || 'image/png') : (document.querySelector('#tab-convert .btn-chip.active')?.dataset.format || 'image/png');
     const originalSize = originalFile?.size || 0;
 
     if (activeTab === 'compress' && format === 'image/png') {
