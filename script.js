@@ -571,11 +571,7 @@ function setupEventListeners() {
         updateCropUI();
     });
 
-    // Transform Actions (shared between crop and transform tabs)
-    document.getElementById('rotate-left').addEventListener('click', () => rotate(-90));
-    document.getElementById('rotate-right').addEventListener('click', () => rotate(90));
-    document.getElementById('flip-h').addEventListener('click', () => { flipH *= -1; updateCropUI(); });
-    document.getElementById('flip-v').addEventListener('click', () => { flipV *= -1; updateCropUI(); });
+    // Rotation and flip controls live exclusively in the Transform tab.
 
     document.querySelectorAll('.h-rotate').forEach(btn => {
         btn.addEventListener('click', () => {
