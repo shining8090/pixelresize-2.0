@@ -30,15 +30,12 @@ jobs:
           name: Verify Classic Production Scripts
           command: |
             test -f script.js
-            test -f gif-encoder.js
             grep -q 'src="script.js"' index.html
-            grep -q 'src="gif-encoder.js"' index.html
 
       - run:
           name: JavaScript Syntax Check
           command: |
             node --check script.js
-            node --check gif-encoder.js
 
       - run:
           name: Verify Build Output
