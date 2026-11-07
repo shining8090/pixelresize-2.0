@@ -804,10 +804,15 @@ function setupCropEngine() {
 }
 
 function initCrop() {
-    if (!currentImage) return;
-    const rect = cropPreviewImg.getBoundingClientRect();
-    const iw = rect.width;
-    const ih = rect.height;
+    if (!currentImage || !cropPreviewImg) return;
+
+    // Use untransformed layout dimensions so crop coordinates match the workspace.
+    const iw = cropPreviewImg.offsetWidth;
+    const ih = cropPreviewImg.offsetHeight;
+    if (!iw || !ih) {
+        requestAnimationFrame(() => { if (cropState.isActive) initCrop(); });
+        return;
+    }
 
     let cw, ch;
     if (cropState.aspectRatio === 'free') {
@@ -845,9 +850,10 @@ function updateCropUI() {
     cropBox.style.height = currentCrop.h + 'px';
 
     // Map to real pixels for the stats
-    const rect = cropPreviewImg.getBoundingClientRect();
-    const scaleX = currentImage.width / rect.width;
-    const scaleY = currentImage.height / rect.height;
+    const layoutWidth = cropPreviewImg.offsetWidth;
+    const layoutHeight = cropPreviewImg.offsetHeight;
+    const scaleX = currentImage.width / layoutWidth;
+    const scaleY = currentImage.height / layoutHeight;
     
     const realW = Math.round(currentCrop.w * scaleX);
     const realH = Math.round(currentCrop.h * scaleY);
@@ -939,18 +945,19 @@ async function applyChanges() {
     const canvas = editorCanvas;
     const ctx = canvas.getContext('2d');
 
-    const rect = cropPreviewImg.getBoundingClientRect();
+    const imageWidth = cropPreviewImg.offsetWidth;
+    const imageHeight = cropPreviewImg.offsetHeight;
 
     let sx, sy, sw, sh;
 
-    if (!rect.width || !rect.height || currentCrop.w === 0) {
+    if (!imageWidth || !imageHeight || currentCrop.w === 0) {
         sx = 0;
         sy = 0;
         sw = currentImage.width;
         sh = currentImage.height;
     } else {
-        const scaleX = currentImage.width / rect.width;
-        const scaleY = currentImage.height / rect.height;
+        const scaleX = currentImage.width / imageWidth;
+        const scaleY = currentImage.height / imageHeight;
 
         sx = currentCrop.x * scaleX;
         sy = currentCrop.y * scaleY;
