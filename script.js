@@ -965,8 +965,10 @@ async function applyChanges() {
         sh = currentCrop.h * scaleY;
     }
 
-    const finalW = parseInt(resizeW.value) || sw;
-    const finalH = parseInt(resizeH.value) || sh;
+    const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+    // Cropping preserves the selected region's native pixel dimensions.
+    const finalW = activeTab === 'crop' ? Math.max(1, Math.round(sw)) : (parseInt(resizeW.value) || sw);
+    const finalH = activeTab === 'crop' ? Math.max(1, Math.round(sh)) : (parseInt(resizeH.value) || sh);
 
     const isHorizontal = rotation % 180 === 0;
     canvas.width = isHorizontal ? finalW : finalH;
@@ -1072,6 +1074,12 @@ async function applyChanges() {
 
     processedDataUrl = URL.createObjectURL(processedBlob);
     mainPreview.src = processedDataUrl;
+
+    // Keep Resize controls synchronized with the cropped output dimensions.
+    if (activeTab === 'crop') {
+        resizeW.value = String(canvas.width);
+        resizeH.value = String(canvas.height);
+    }
 
     updateInfo();
 
