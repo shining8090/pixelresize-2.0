@@ -982,7 +982,6 @@ async function applyChanges() {
     ctx.restore();
 
     let format = document.querySelector('#tab-convert .btn-chip.active')?.dataset.format || 'image/png';
-    const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
     const originalSize = originalFile?.size || 0;
 
     if (activeTab === 'compress' && format === 'image/png') {
